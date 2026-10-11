@@ -61,7 +61,6 @@ export default function CreatePage() {
         return;
       }
 
-      // Validate tickets
       const validTickets = tickets.filter((t) => t.name.trim());
       if (validTickets.length === 0) {
         setError('Add at least one ticket type');
