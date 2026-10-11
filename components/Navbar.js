@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
 
@@ -22,7 +22,13 @@ function getAvatarColor(email) {
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -39,6 +45,7 @@ export default function Navbar() {
 
   async function handleLogout() {
     await signOut();
+    setMenuOpen(false);
     router.push('/');
     router.refresh();
   }
@@ -51,13 +58,20 @@ export default function Navbar() {
       <Link href="/" className="navbar-logo">
         Ticket<span>Box</span>
       </Link>
-      <div className="navbar-links">
+
+      {/* Desktop links */}
+      <div className="navbar-links navbar-desktop">
         <Link href="/browse">Browse</Link>
         {!loading && user && <Link href="/my-events">My Events</Link>}
         <Link href="/create" className="navbar-cta">+ Create</Link>
         {loading ? null : user ? (
           <>
-            <Link href="/my-events" className="navbar-avatar" style={{ background: avatarColor }} title={user.email}>
+            <Link
+              href="/my-events"
+              className="navbar-avatar"
+              style={{ background: avatarColor }}
+              title={user.email}
+            >
               {initial}
             </Link>
             <button onClick={handleLogout} className="navbar-logout">Log out</button>
@@ -66,6 +80,44 @@ export default function Navbar() {
           <Link href="/login">Login</Link>
         )}
       </div>
+
+      {/* Mobile: avatar + hamburger */}
+      <div className="navbar-mobile">
+        {!loading && user && (
+          <Link
+            href="/my-events"
+            className="navbar-avatar"
+            style={{ background: avatarColor }}
+            title={user.email}
+          >
+            {initial}
+          </Link>
+        )}
+        <button
+          className="navbar-burger"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu"
+        >
+          <span className={`burger-line ${menuOpen ? 'open' : ''}`}></span>
+          <span className={`burger-line ${menuOpen ? 'open' : ''}`}></span>
+          <span className={`burger-line ${menuOpen ? 'open' : ''}`}></span>
+        </button>
+      </div>
+
+      {/* Mobile menu drawer */}
+      {menuOpen && (
+        <div className="navbar-drawer">
+          <Link href="/browse">Browse</Link>
+          {!loading && user && <Link href="/my-events">My Events</Link>}
+          <Link href="/create">+ Create event</Link>
+          {!loading && !user && <Link href="/login">Login</Link>}
+          {!loading && user && (
+            <button onClick={handleLogout} className="drawer-logout">
+              Log out
+            </button>
+          )}
+        </div>
+      )}
     </nav>
   );
-          }
+                }
