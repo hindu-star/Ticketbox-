@@ -142,3 +142,10 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 600; font-size: 14px; padding: 0;
 }
 .auth-form button[disabled] { opacity: 0.6; cursor: wait; }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center; padding: 60px 24px; color: var(--gray-500);
+  border: 1px dashed var(--gray-200); border-radius: 20px;
+}
+.empty-state a { color: var(--blue); font-weight: 600; }
