@@ -370,3 +370,40 @@ button { font-family: inherit; cursor: pointer; }
   }
   .ticket-input-row input:nth-child(1) { grid-column: 1 / -1; }
 }
+/* TICKET INPUT - MOBILE FIX */
+@media (max-width: 600px) {
+  .tickets-section {
+    padding: 16px 14px;
+  }
+  .tickets-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .tickets-header h3 { font-size: 15px; }
+  .add-ticket-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .ticket-input-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+    padding-right: 28px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    background: #fff;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .ticket-input-row input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .remove-ticket-btn {
+    top: 10px;
+    right: 8px;
+  }
+}
