@@ -11,7 +11,9 @@ import { getEvent, getTicketTypes } from '../../../../lib/events';
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();
-  const { eventId, ticketId } = params;
+
+  const eventId = params?.eventId;
+  const ticketId = params?.ticketId;
 
   const [event, setEvent] = useState(null);
   const [ticket, setTicket] = useState(null);
@@ -22,6 +24,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!eventId || !ticketId) return;
+
     async function load() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -41,6 +45,7 @@ export default function CheckoutPage() {
         if (!t) throw new Error('Ticket not found');
         setTicket(t);
       } catch (err) {
+        console.error('Checkout load error:', err);
         setError(err.message || 'Failed to load checkout');
       } finally {
         setLoading(false);
@@ -74,6 +79,7 @@ export default function CheckoutPage() {
 
       window.location.href = data.authorization_url;
     } catch (err) {
+      console.error('Pay error:', err);
       setError(err.message || 'Payment failed to start');
       setPaying(false);
     }
@@ -104,6 +110,18 @@ export default function CheckoutPage() {
     );
   }
 
+  if (!event || !ticket) {
+    return (
+      <>
+        <Navbar />
+        <div className="auth-page">
+          <p>Loading...</p>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
@@ -115,9 +133,7 @@ export default function CheckoutPage() {
 
         <div className="checkout-card">
           <div className="checkout-event-title">{event.title}</div>
-          <div className="checkout-event-meta">
-            📍 {event.location}
-          </div>
+          <div className="checkout-event-meta">📍 {event.location}</div>
         </div>
 
         <div className="checkout-card">
@@ -178,4 +194,4 @@ export default function CheckoutPage() {
       <Footer />
     </>
   );
-      }
+          }
