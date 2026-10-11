@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { verifyTransaction } from '../../../../lib/paystack';
+import { verifyTransaction } from '../../../../../lib/paystack';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -25,7 +25,6 @@ export async function GET(request) {
       );
     }
 
-    // Mark the order as paid
     const { data: order, error } = await supabase
       .from('orders')
       .update({ status: 'paid' })
@@ -52,4 +51,4 @@ export async function GET(request) {
       { status: 500 }
     );
   }
-}
+  }
