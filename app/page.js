@@ -51,7 +51,7 @@ export default async function HomePage() {
                     : 'Date TBA',
                   title: e.title,
                   location: e.location,
-                  price: 'View tickets',
+                  price: 'View tickets →',
                 }}
               />
             ))}
