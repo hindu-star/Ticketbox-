@@ -13,7 +13,7 @@ const upcomingPosts = [
   },
   {
     title: '5 ways to promote your event on WhatsApp',
-    excerpt: 'WhatsApp is Nigeria\\'s biggest social network. Here\\'s how to use it to sell tickets.',
+    excerpt: 'WhatsApp is the biggest social network in Nigeria. Here is how to use it to sell tickets.',
     date: 'Coming soon',
   },
   {
@@ -52,4 +52,4 @@ export default function BlogPage() {
       <Footer />
     </>
   );
-    }
+}
