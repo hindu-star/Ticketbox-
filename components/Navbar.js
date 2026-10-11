@@ -4,7 +4,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link href="/" className="navbar-logo">
-        🎟️ Ticket<span>Box</span>
+        Ticket<span>Box</span>
       </Link>
       <div className="navbar-links">
         <Link href="/browse">Browse</Link>
