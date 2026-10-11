@@ -176,3 +176,33 @@ button { font-family: inherit; cursor: pointer; }
   .navbar-links { gap: 12px; font-size: 13px; }
   .navbar-cta { padding: 6px 10px; font-size: 12px; }
 }
+
+/* FOOTER UPGRADE */
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px;
+  text-align: left; padding: 20px 0 40px;
+}
+.footer-brand p { font-size: 14px; color: var(--gray-500); max-width: 300px; margin-top: 8px; }
+.footer-logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; color: var(--black); }
+.footer-logo span { color: var(--blue); }
+.footer-links { display: flex; gap: 60px; }
+.footer-links h4 {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--gray-700); margin-bottom: 12px;
+}
+.footer-links a {
+  display: block; font-size: 14px; color: var(--gray-500);
+  margin-bottom: 8px;
+}
+.footer-links a:hover { color: var(--blue); }
+.footer-bottom {
+  text-align: center; font-size: 13px; color: var(--gray-500);
+  border-top: 1px solid var(--gray-200); padding-top: 20px;
+}
+
+/* FOOTER MOBILE */
+@media (max-width: 600px) {
+  .footer-inner { grid-template-columns: 1fr; gap: 30px; }
+  .footer-links { gap: 40px; }
+}
