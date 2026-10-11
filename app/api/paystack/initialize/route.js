@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { initializeTransaction, generateReference } from '../../../../../lib/paystack';
+import { initializeTransaction, generateReference } from '@/lib/paystack';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
