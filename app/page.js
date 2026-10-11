@@ -43,11 +43,10 @@ export default async function HomePage() {
                 event={{
                   id: e.id,
                   emoji: e.emoji || '🎉',
+                  image_url: e.image_url,
                   date: e.event_date
                     ? new Date(e.event_date).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
+                        day: 'numeric', month: 'short', year: 'numeric',
                       })
                     : 'Date TBA',
                   title: e.title,
@@ -61,17 +60,17 @@ export default async function HomePage() {
       </section>
 
       <div className="cta">
-  <h2>Hosting an event? 🎉</h2>
-  <p>Sell tickets in minutes, get paid instantly, and reach thousands of people.</p>
-  <Link href="/create"><button>Start selling tickets</button></Link>
-  <div className="cta-stats">
-    <div><strong>Instant</strong><span>Setup</span></div>
-    <div><strong>0%</strong><span>Hidden fees</span></div>
-    <div><strong>Secure</strong><span>Payments</span></div>
-  </div>
-</div>
+        <h2>Hosting an event? 🎉</h2>
+        <p>Sell tickets in minutes, get paid instantly, and reach thousands of people.</p>
+        <Link href="/create"><button>Start selling tickets</button></Link>
+        <div className="cta-stats">
+          <div><strong>Instant</strong><span>Setup</span></div>
+          <div><strong>0%</strong><span>Hidden fees</span></div>
+          <div><strong>Secure</strong><span>Payments</span></div>
+        </div>
+      </div>
 
       <Footer />
     </>
   );
-                  }
+          }
