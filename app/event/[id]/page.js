@@ -18,7 +18,10 @@ export default async function EventPage({ params }) {
 
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleDateString('en-GB', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       })
     : 'Date coming soon';
 
@@ -38,7 +41,9 @@ export default async function EventPage({ params }) {
             <div>🕐 {event.event_time || 'Time TBA'}</div>
             <div>📍 {event.location}</div>
           </div>
-          <p className="event-desc">{event.description || 'Full details coming soon.'}</p>
+          <p className="event-desc">
+            {event.description || 'Full details coming soon.'}
+          </p>
 
           <h2 className="ticket-heading">Tickets</h2>
           <div className="ticket-list">
@@ -49,7 +54,9 @@ export default async function EventPage({ params }) {
                 <div key={t.id} className="ticket-row">
                   <div>
                     <div className="ticket-name">{t.name}</div>
-                    <div className="ticket-desc">{t.description || 'General admission'}</div>
+                    <div className="ticket-desc">
+                      {t.description || 'General admission'}
+                    </div>
                   </div>
                   <div className="ticket-right">
                     <div className="ticket-price">
