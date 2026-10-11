@@ -7,14 +7,8 @@ import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
 
 const AVATAR_COLORS = [
-  '#f97316', // orange
-  '#2563eb', // blue
-  '#16a34a', // green
-  '#dc2626', // red
-  '#9333ea', // purple
-  '#0891b2', // cyan
-  '#ca8a04', // yellow
-  '#db2777', // pink
+  '#f97316', '#2563eb', '#16a34a', '#dc2626',
+  '#9333ea', '#0891b2', '#ca8a04', '#db2777',
 ];
 
 function getAvatarColor(email) {
@@ -59,10 +53,11 @@ export default function Navbar() {
       </Link>
       <div className="navbar-links">
         <Link href="/browse">Browse</Link>
+        {!loading && user && <Link href="/my-events">My Events</Link>}
         <Link href="/create" className="navbar-cta">+ Create</Link>
         {loading ? null : user ? (
           <>
-            <Link href="/" className="navbar-avatar" style={{ background: avatarColor }} title={user.email}>
+            <Link href="/my-events" className="navbar-avatar" style={{ background: avatarColor }} title={user.email}>
               {initial}
             </Link>
             <button onClick={handleLogout} className="navbar-logout">Log out</button>
@@ -73,4 +68,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+          }
