@@ -27,7 +27,7 @@ export default function LoginPage() {
         await signIn(email, password);
         router.push('/');
       } else {
-        await signUp(email, password);
+        await signUp(email, password, email.split('@')[0]);
         setSuccess('Account created! Check your email to confirm, then log in.');
         setMode('login');
       }
