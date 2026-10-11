@@ -40,7 +40,7 @@ export default async function BrowsePage() {
                     : 'Date TBA',
                   title: e.title,
                   location: e.location,
-                  price: 'View tickets',
+                  price: 'View tickets →',
                 }}
               />
             ))}
