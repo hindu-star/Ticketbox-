@@ -61,10 +61,15 @@ export default async function HomePage() {
       </section>
 
       <div className="cta">
-        <h2>Hosting an event?</h2>
-        <p>Create your event and start selling tickets in minutes.</p>
-        <Link href="/create"><button>Create an event</button></Link>
-      </div>
+  <h2>Hosting an event? 🎉</h2>
+  <p>Sell tickets in minutes, get paid instantly, and reach thousands of people.</p>
+  <Link href="/create"><button>Start selling tickets</button></Link>
+  <div className="cta-stats">
+    <div><strong>Instant</strong><span>Setup</span></div>
+    <div><strong>0%</strong><span>Hidden fees</span></div>
+    <div><strong>Secure</strong><span>Payments</span></div>
+  </div>
+</div>
 
       <Footer />
     </>
