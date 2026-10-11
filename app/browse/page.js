@@ -1,29 +1,54 @@
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import EventCard from '../../components/EventCard';
+import { getEvents } from '../../lib/events';
 
-const events = [
-  { id: 'lagos-music-festival', emoji: '🎵', date: 'Sat, Dec 14', title: 'Lagos Music Festival', location: 'Eko Hotel, Lagos', price: 'From ₦5,000' },
-  { id: 'comedy-night-live', emoji: '🎤', date: 'Fri, Dec 20', title: 'Comedy Night Live', location: 'Terra Kulture, Lagos', price: 'From ₦3,000' },
-  { id: 'tech-startup-summit', emoji: '💼', date: 'Tue, Jan 7', title: 'Tech Startup Summit', location: 'Landmark Centre, Lagos', price: 'From ₦10,000' },
-  { id: 'art-culture-expo', emoji: '🎨', date: 'Sun, Jan 12', title: 'Art & Culture Expo', location: 'Nike Art Gallery', price: 'Free' },
-  { id: 'afrobeats-night', emoji: '🎧', date: 'Fri, Jan 17', title: 'Afrobeats Night', location: 'Hard Rock Cafe, Lagos', price: 'From ₦7,500' },
-  { id: 'startup-pitch-night', emoji: '🚀', date: 'Thu, Jan 23', title: 'Startup Pitch Night', location: 'Co-Creation Hub, Yaba', price: 'Free' },
-  { id: 'lagos-food-festival', emoji: '🍲', date: 'Sat, Feb 1', title: 'Lagos Food Festival', location: 'Victoria Island', price: 'From ₦2,000' },
-  { id: 'youth-conference', emoji: '🙏', date: 'Sun, Feb 9', title: 'Youth Conference 2026', location: 'Tafawa Balewa Square', price: 'Free' },
-];
+export const dynamic = 'force-dynamic';
 
-export default function BrowsePage() {
+export default async function BrowsePage() {
+  let events = [];
+
+  try {
+    events = await getEvents();
+  } catch (err) {
+    console.error('Failed to load events:', err);
+  }
+
   return (
     <>
       <Navbar />
       <section className="section">
         <h2>🎟️ All Events</h2>
-        <div className="events-grid">
-          {events.map((e) => <EventCard key={e.id} event={e} />)}
-        </div>
+
+        {events.length === 0 ? (
+          <div className="empty-state">
+            <p>No events yet. Be the first to create one!</p>
+          </div>
+        ) : (
+          <div className="events-grid">
+            {events.map((e) => (
+              <EventCard
+                key={e.id}
+                event={{
+                  id: e.id,
+                  emoji: e.emoji || '🎉',
+                  date: e.event_date
+                    ? new Date(e.event_date).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : 'Date TBA',
+                  title: e.title,
+                  location: e.location,
+                  price: e.price > 0 ? `From ₦${Number(e.price).toLocaleString()}` : 'Free',
+                }}
+              />
+            ))}
+          </div>
+        )}
       </section>
       <Footer />
     </>
   );
-    }
+          }
