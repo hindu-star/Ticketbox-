@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { initializeTransaction, generateReference } from '../../../../lib/paystack';
+import { initializeTransaction, generateReference } from '../../../../../lib/paystack';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -15,7 +15,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    // Fetch the ticket type to get the price
     const { data: ticket, error: ticketError } = await supabase
       .from('ticket_types')
       .select('*')
@@ -49,9 +48,6 @@ export async function POST(request) {
       callbackUrl: `${baseUrl}/checkout/success?reference=${reference}`,
     });
 
-    // Store a pending order
-    const { data: { user } } = await supabase.auth.getUser();
-    
     await supabase.from('orders').insert([
       {
         event_id: eventId,
@@ -78,4 +74,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-}
+                             }
