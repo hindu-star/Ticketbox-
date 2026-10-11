@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
-import { getEvent } from '../../../lib/events';
+import { getEvent, getTicketTypes } from '../../../lib/events';
 
 export default async function EventPage({ params }) {
   let event;
+  let tickets = [];
+
   try {
     event = await getEvent(params.id);
+    tickets = await getTicketTypes(params.id);
   } catch (err) {
     notFound();
   }
@@ -39,22 +42,28 @@ export default async function EventPage({ params }) {
 
           <h2 className="ticket-heading">Tickets</h2>
           <div className="ticket-list">
-            <div className="ticket-row">
-              <div>
-                <div className="ticket-name">Regular</div>
-                <div className="ticket-desc">General admission</div>
-              </div>
-              <div className="ticket-right">
-                <div className="ticket-price">
-                  {event.price > 0 ? `₦${Number(event.price).toLocaleString()}` : 'Free'}
+            {tickets.length === 0 ? (
+              <p style={{ color: '#64748b' }}>No tickets available yet.</p>
+            ) : (
+              tickets.map((t) => (
+                <div key={t.id} className="ticket-row">
+                  <div>
+                    <div className="ticket-name">{t.name}</div>
+                    <div className="ticket-desc">{t.description || 'General admission'}</div>
+                  </div>
+                  <div className="ticket-right">
+                    <div className="ticket-price">
+                      {t.price > 0 ? `₦${Number(t.price).toLocaleString()}` : 'Free'}
+                    </div>
+                    <button className="ticket-buy">Buy</button>
+                  </div>
                 </div>
-                <button className="ticket-buy">Buy</button>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         </div>
       </div>
       <Footer />
     </>
   );
-                    }
+}
