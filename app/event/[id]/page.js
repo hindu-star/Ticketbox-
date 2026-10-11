@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { getEvent, getTicketTypes } from '../../../lib/events';
@@ -62,7 +63,12 @@ export default async function EventPage({ params }) {
                     <div className="ticket-price">
                       {t.price > 0 ? `₦${Number(t.price).toLocaleString()}` : 'Free'}
                     </div>
-                    <button className="ticket-buy">Buy</button>
+                    <Link
+                      href={`/checkout/${event.id}/${t.id}`}
+                      className="ticket-buy"
+                    >
+                      Buy
+                    </Link>
                   </div>
                 </div>
               ))
