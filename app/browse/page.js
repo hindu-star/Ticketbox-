@@ -32,11 +32,10 @@ export default async function BrowsePage() {
                 event={{
                   id: e.id,
                   emoji: e.emoji || '🎉',
+                  image_url: e.image_url,
                   date: e.event_date
                     ? new Date(e.event_date).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
+                        day: 'numeric', month: 'short', year: 'numeric',
                       })
                     : 'Date TBA',
                   title: e.title,
@@ -51,4 +50,4 @@ export default async function BrowsePage() {
       <Footer />
     </>
   );
-          }
+}
