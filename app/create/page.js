@@ -13,9 +13,11 @@ export default function CreatePage() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
+  const [tickets, setTickets] = useState([
+    { name: 'Regular', description: 'General admission', price: '' },
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -23,14 +25,27 @@ export default function CreatePage() {
   function handleFileChange(e) {
     const selected = e.target.files?.[0];
     if (!selected) return;
-
     if (selected.size > 5 * 1024 * 1024) {
       setError('Image must be under 5MB');
       return;
     }
-
     setFile(selected);
     setPreview(URL.createObjectURL(selected));
+  }
+
+  function updateTicket(index, field, value) {
+    const updated = [...tickets];
+    updated[index][field] = value;
+    setTickets(updated);
+  }
+
+  function addTicket() {
+    setTickets([...tickets, { name: '', description: '', price: '' }]);
+  }
+
+  function removeTicket(index) {
+    if (tickets.length === 1) return;
+    setTickets(tickets.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e) {
@@ -46,8 +61,15 @@ export default function CreatePage() {
         return;
       }
 
-      let imageUrl = null;
+      // Validate tickets
+      const validTickets = tickets.filter((t) => t.name.trim());
+      if (validTickets.length === 0) {
+        setError('Add at least one ticket type');
+        setLoading(false);
+        return;
+      }
 
+      let imageUrl = null;
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
@@ -65,17 +87,19 @@ export default function CreatePage() {
         imageUrl = publicUrl;
       }
 
-      const newEvent = await createEvent({
-        title,
-        location,
-        event_date: date,
-        event_time: time,
-        description,
-        price: Number(price) || 0,
-        image_url: imageUrl,
-        emoji: '🎉',
-        organizer_id: user.id,
-      });
+      const newEvent = await createEvent(
+        {
+          title,
+          location,
+          event_date: date,
+          event_time: time,
+          description,
+          image_url: imageUrl,
+          emoji: '🎉',
+          organizer_id: user.id,
+        },
+        validTickets
+      );
 
       router.push(`/event/${newEvent.id}`);
     } catch (err) {
@@ -88,7 +112,7 @@ export default function CreatePage() {
   return (
     <>
       <Navbar />
-      <div className="auth-page">
+      <div className="auth-page" style={{ maxWidth: 560 }}>
         <h1>Create an event</h1>
         <p>Fill in the details and start selling tickets.</p>
 
@@ -113,12 +137,7 @@ export default function CreatePage() {
                 <span className="image-hint">JPG, PNG — max 5MB</span>
               </div>
             )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              hidden
-            />
+            <input type="file" accept="image/*" onChange={handleFileChange} hidden />
           </label>
 
           <input
@@ -146,13 +165,49 @@ export default function CreatePage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          <input
-            type="number"
-            placeholder="Ticket price (₦) — leave 0 for free"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            min="0"
-          />
+
+          <div className="tickets-section">
+            <div className="tickets-header">
+              <h3>Ticket types</h3>
+              <button type="button" onClick={addTicket} className="add-ticket-btn">
+                + Add ticket
+              </button>
+            </div>
+
+            {tickets.map((ticket, i) => (
+              <div key={i} className="ticket-input-row">
+                <input
+                  type="text"
+                  placeholder="Name (e.g. VIP)"
+                  value={ticket.name}
+                  onChange={(e) => updateTicket(i, 'name', e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder="Short description"
+                  value={ticket.description}
+                  onChange={(e) => updateTicket(i, 'description', e.target.value)}
+                />
+                <input
+                  type="number"
+                  placeholder="Price (₦)"
+                  value={ticket.price}
+                  onChange={(e) => updateTicket(i, 'price', e.target.value)}
+                  min="0"
+                />
+                {tickets.length > 1 && (
+                  <button
+                    type="button"
+                    className="remove-ticket-btn"
+                    onClick={() => removeTicket(i)}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
           <button type="submit" disabled={loading}>
             {loading ? 'Creating...' : 'Create event'}
           </button>
