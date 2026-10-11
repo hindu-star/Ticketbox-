@@ -6,6 +6,25 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
 
+const AVATAR_COLORS = [
+  '#f97316', // orange
+  '#2563eb', // blue
+  '#16a34a', // green
+  '#dc2626', // red
+  '#9333ea', // purple
+  '#0891b2', // cyan
+  '#ca8a04', // yellow
+  '#db2777', // pink
+];
+
+function getAvatarColor(email) {
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 export default function Navbar() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +49,9 @@ export default function Navbar() {
     router.refresh();
   }
 
+  const initial = user?.email ? user.email[0].toUpperCase() : '';
+  const avatarColor = user?.email ? getAvatarColor(user.email) : '#333';
+
   return (
     <nav className="navbar">
       <Link href="/" className="navbar-logo">
@@ -40,9 +62,9 @@ export default function Navbar() {
         <Link href="/create" className="navbar-cta">+ Create</Link>
         {loading ? null : user ? (
           <>
-            <span className="navbar-user" title={user.email}>
-              {user.email?.split('@')[0]}
-            </span>
+            <Link href="/" className="navbar-avatar" style={{ background: avatarColor }} title={user.email}>
+              {initial}
+            </Link>
             <button onClick={handleLogout} className="navbar-logout">Log out</button>
           </>
         ) : (
@@ -51,4 +73,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-    }
+}
