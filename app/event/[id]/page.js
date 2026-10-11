@@ -5,7 +5,6 @@ import { getEvent } from '../../../lib/events';
 
 export default async function EventPage({ params }) {
   let event;
-
   try {
     event = await getEvent(params.id);
   } catch (err) {
@@ -16,10 +15,7 @@ export default async function EventPage({ params }) {
 
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleDateString('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       })
     : 'Date coming soon';
 
@@ -27,7 +23,11 @@ export default async function EventPage({ params }) {
     <>
       <Navbar />
       <div className="event-detail">
-        <div className="event-hero">{event.emoji || '🎉'}</div>
+        {event.image_url ? (
+          <img src={event.image_url} alt={event.title} className="event-hero-img" />
+        ) : (
+          <div className="event-hero">{event.emoji || '🎉'}</div>
+        )}
         <div className="event-info">
           <h1>{event.title}</h1>
           <div className="event-meta">
@@ -35,9 +35,7 @@ export default async function EventPage({ params }) {
             <div>🕐 {event.event_time || 'Time TBA'}</div>
             <div>📍 {event.location}</div>
           </div>
-          <p className="event-desc">
-            {event.description || 'Full details coming soon.'}
-          </p>
+          <p className="event-desc">{event.description || 'Full details coming soon.'}</p>
 
           <h2 className="ticket-heading">Tickets</h2>
           <div className="ticket-list">
@@ -59,4 +57,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-}
+                    }
