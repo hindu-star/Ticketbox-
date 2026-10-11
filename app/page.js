@@ -51,7 +51,7 @@ export default async function HomePage() {
                     : 'Date TBA',
                   title: e.title,
                   location: e.location,
-                  price: e.price > 0 ? `From ₦${Number(e.price).toLocaleString()}` : 'Free',
+                  price: 'View tickets',
                 }}
               />
             ))}
