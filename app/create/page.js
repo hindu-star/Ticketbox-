@@ -14,10 +14,24 @@ export default function CreatePage() {
   const [time, setTime] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [emoji, setEmoji] = useState('🎉');
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  function handleFileChange(e) {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    if (selected.size > 5 * 1024 * 1024) {
+      setError('Image must be under 5MB');
+      return;
+    }
+
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected));
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -26,11 +40,29 @@ export default function CreatePage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
         setError('You must be logged in to create an event.');
         setLoading(false);
         return;
+      }
+
+      let imageUrl = null;
+
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('event-images')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-images')
+          .getPublicUrl(fileName);
+
+        imageUrl = publicUrl;
       }
 
       const newEvent = await createEvent({
@@ -40,12 +72,14 @@ export default function CreatePage() {
         event_time: time,
         description,
         price: Number(price) || 0,
-        emoji,
+        image_url: imageUrl,
+        emoji: '🎉',
         organizer_id: user.id,
       });
 
       router.push(`/event/${newEvent.id}`);
     } catch (err) {
+      console.error(err);
       setError(err.message || 'Failed to create event');
       setLoading(false);
     }
@@ -68,12 +102,25 @@ export default function CreatePage() {
             onChange={(e) => setTitle(e.target.value)}
             required
           />
-          <input
-            type="text"
-            placeholder="Emoji (e.g. 🎵 🎤 🎨)"
-            value={emoji}
-            onChange={(e) => setEmoji(e.target.value)}
-          />
+
+          <label className="image-upload">
+            {preview ? (
+              <img src={preview} alt="Preview" className="image-preview" />
+            ) : (
+              <div className="image-placeholder">
+                <span>📷</span>
+                <span>Tap to upload event image</span>
+                <span className="image-hint">JPG, PNG — max 5MB</span>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              hidden
+            />
+          </label>
+
           <input
             type="text"
             placeholder="Location"
