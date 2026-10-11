@@ -236,3 +236,14 @@ button { font-family: inherit; cursor: pointer; }
 .navbar-logout:hover {
   background: #fef2f2; color: #b91c1c; border-color: #fecaca;
 }
+
+/* NAVBAR AVATAR */
+.navbar-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 15px;
+  text-decoration: none; line-height: 1;
+  transition: transform 0.1s;
+}
+.navbar-avatar:hover { transform: scale(1.08); }
