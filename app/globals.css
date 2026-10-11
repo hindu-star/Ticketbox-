@@ -206,3 +206,18 @@ button { font-family: inherit; cursor: pointer; }
   .footer-inner { grid-template-columns: 1fr; gap: 30px; }
   .footer-links { gap: 40px; }
 }
+
+/* CTA STATS */
+.cta-stats {
+  display: flex; justify-content: center; gap: 40px;
+  margin-top: 32px; padding-top: 32px;
+  border-top: 1px solid var(--gray-200);
+}
+.cta-stats div { text-align: center; }
+.cta-stats strong {
+  display: block; font-size: 20px; font-weight: 800; color: var(--black);
+}
+.cta-stats span {
+  font-size: 12px; color: var(--gray-500); text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
