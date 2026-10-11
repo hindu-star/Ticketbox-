@@ -578,3 +578,86 @@ button { font-family: inherit; cursor: pointer; }
     width: 100%; text-align: center;
   }
 }
+/* BLOG CARDS CLICKABLE */
+a.blog-card { display: block; color: inherit; }
+
+/* POST PAGE */
+.post-page {
+  max-width: 720px; margin: 0 auto; padding: 40px 24px 80px;
+}
+.post-back {
+  display: inline-block;
+  font-size: 14px; color: var(--gray-500);
+  margin-bottom: 32px;
+  font-weight: 500;
+}
+.post-back:hover { color: var(--blue); }
+
+.post-meta {
+  font-size: 13px; font-weight: 600; color: var(--blue);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+.post-title {
+  font-size: 34px; font-weight: 800; letter-spacing: -1px;
+  line-height: 1.15; margin-bottom: 16px;
+}
+.post-excerpt {
+  font-size: 18px; color: var(--gray-700); line-height: 1.6;
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.post-body { font-size: 17px; line-height: 1.75; color: #1f2937; }
+.post-heading {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.3px;
+  margin: 36px 0 14px;
+  color: var(--black);
+}
+.post-paragraph { margin-bottom: 20px; }
+.post-list, .post-checklist {
+  margin: 16px 0 24px;
+  padding-left: 24px;
+}
+.post-list li, .post-checklist li {
+  margin-bottom: 8px;
+  line-height: 1.7;
+}
+.post-checklist { list-style: none; padding-left: 0; }
+.post-checklist li {
+  padding-left: 28px;
+  position: relative;
+}
+.post-checklist li::before {
+  content: '☐';
+  position: absolute; left: 0;
+  font-size: 18px; color: var(--blue);
+}
+.post-quote {
+  border-left: 4px solid var(--blue);
+  padding: 8px 16px;
+  margin: 20px 0;
+  font-style: italic;
+  color: var(--gray-700);
+  background: var(--gray-50);
+  border-radius: 0 8px 8px 0;
+}
+
+.post-cta {
+  margin-top: 60px;
+  padding: 40px 24px;
+  background: var(--gray-50);
+  border-radius: 16px;
+  text-align: center;
+}
+.post-cta h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.post-cta p { color: var(--gray-700); margin-bottom: 20px; }
+
+@media (max-width: 600px) {
+  .post-page { padding: 24px 20px 60px; }
+  .post-title { font-size: 26px; }
+  .post-excerpt { font-size: 16px; }
+  .post-body { font-size: 16px; }
+  .post-heading { font-size: 19px; }
+}
