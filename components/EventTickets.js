@@ -7,14 +7,14 @@ import InviteUnlocker from './InviteUnlocker';
 export default function EventTickets({ eventId, tickets }) {
   const [unlockedIds, setUnlockedIds] = useState([]);
 
-  const normalTickets = tickets.filter((t) => t.ticket_kind !== 'invite');
-  const inviteTickets = tickets.filter((t) => t.ticket_kind === 'invite');
+  const publicTickets = tickets.filter((t) => !t.is_invite_only);
+  const inviteTickets = tickets.filter((t) => t.is_invite_only);
 
   const visibleInviteTickets = inviteTickets.filter((t) =>
     unlockedIds.includes(t.id)
   );
 
-  const visibleTickets = [...normalTickets, ...visibleInviteTickets];
+  const visibleTickets = [...publicTickets, ...visibleInviteTickets];
 
   function handleUnlock(ids) {
     setUnlockedIds(ids);
@@ -24,6 +24,8 @@ export default function EventTickets({ eventId, tickets }) {
     <>
       {visibleTickets.length === 0 && inviteTickets.length === 0 ? (
         <p style={{ color: '#64748b' }}>No tickets available yet.</p>
+      ) : visibleTickets.length === 0 ? (
+        <p style={{ color: '#64748b' }}>This event is invite-only.</p>
       ) : (
         <div className="ticket-list">
           {visibleTickets.map((t) => {
@@ -32,7 +34,6 @@ export default function EventTickets({ eventId, tickets }) {
               : null;
             const soldOut = remaining !== null && remaining <= 0;
             const isFree = t.ticket_kind === 'free' || Number(t.price) === 0;
-            const isInvite = t.ticket_kind === 'invite';
             const perks = Array.isArray(t.perks) ? t.perks : [];
 
             return (
@@ -40,7 +41,7 @@ export default function EventTickets({ eventId, tickets }) {
                 <div className="ticket-row-main">
                   <div className="ticket-name">
                     {t.name}
-                    {isInvite && (
+                    {t.is_invite_only && (
                       <span className="ticket-badge invite">Invite-only</span>
                     )}
                   </div>
@@ -95,4 +96,4 @@ export default function EventTickets({ eventId, tickets }) {
       )}
     </>
   );
-}
+    }
