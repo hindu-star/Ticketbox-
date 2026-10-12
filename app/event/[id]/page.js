@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
+import ShareButton from '../../../components/ShareButton';
 import { getEvent, getTicketTypes } from '../../../lib/events';
-
 export default async function EventPage({ params }) {
   let event;
   let tickets = [];
@@ -36,8 +36,11 @@ export default async function EventPage({ params }) {
           <div className="event-hero">{event.emoji || '🎉'}</div>
         )}
         <div className="event-info">
-          <h1>{event.title}</h1>
-          <div className="event-meta">
+  <div className="event-title-row">
+    <h1>{event.title}</h1>
+    <ShareButton eventId={event.id} title={event.title} />
+  </div>
+  <div className="event-meta">
             <div>📅 {formattedDate}</div>
             <div>🕐 {event.event_time || 'Time TBA'}</div>
             <div>📍 {event.location}</div>
