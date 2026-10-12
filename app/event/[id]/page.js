@@ -60,14 +60,31 @@ export default async function EventPage({ params }) {
                   ? t.capacity - (t.quantity_sold || 0)
                   : null;
                 const soldOut = remaining !== null && remaining <= 0;
+                const isFree = t.ticket_kind === 'free' || Number(t.price) === 0;
+                const isInvite = t.ticket_kind === 'invite';
+                const perks = Array.isArray(t.perks) ? t.perks : [];
 
                 return (
                   <div key={t.id} className="ticket-row">
-                    <div>
-                      <div className="ticket-name">{t.name}</div>
+                    <div className="ticket-row-main">
+                      <div className="ticket-name">
+                        {t.name}
+                        {t.ticket_kind === 'invite' && (
+                          <span className="ticket-badge">Invite-only</span>
+                        )}
+                      </div>
                       <div className="ticket-desc">
                         {t.description || 'General admission'}
                       </div>
+
+                      {perks.length > 0 && (
+                        <ul className="ticket-perks">
+                          {perks.map((p, idx) => (
+                            <li key={idx}>✓ {p}</li>
+                          ))}
+                        </ul>
+                      )}
+
                       {t.capacity && (
                         <div className={`ticket-remaining ${soldOut ? 'sold-out' : ''}`}>
                           {soldOut
@@ -75,13 +92,20 @@ export default async function EventPage({ params }) {
                             : `${remaining} of ${t.capacity} remaining`}
                         </div>
                       )}
+                      {t.order_limit && t.order_limit > 1 && (
+                        <div className="ticket-order-limit">
+                          Max {t.order_limit} per person
+                        </div>
+                      )}
                     </div>
                     <div className="ticket-right">
                       <div className="ticket-price">
-                        {t.price > 0 ? `₦${Number(t.price).toLocaleString()}` : 'Free'}
+                        {isFree ? 'Free' : `₦${Number(t.price).toLocaleString()}`}
                       </div>
                       {soldOut ? (
                         <span className="ticket-soldout-btn">Sold out</span>
+                      ) : isInvite ? (
+                        <span className="ticket-soldout-btn">Invite only</span>
                       ) : (
                         <Link
                           href={`/checkout/${event.id}/${t.id}`}
