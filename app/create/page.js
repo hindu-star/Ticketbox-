@@ -17,6 +17,7 @@ function emptyTicket() {
     unlimited: false,
     order_limit: 10,
     perks: [],
+    is_invite_only: false,
     invite_password: '',
   };
 }
@@ -100,9 +101,8 @@ export default function CreatePage() {
         return;
       }
 
-      // Validate invite tickets have a password
       for (const t of validTickets) {
-        if (t.ticket_kind === 'invite' && !t.invite_password.trim()) {
+        if (t.is_invite_only && !t.invite_password.trim()) {
           setError(`Invite ticket "${t.name}" needs a password`);
           setLoading(false);
           return;
@@ -146,8 +146,8 @@ export default function CreatePage() {
           capacity: t.unlimited ? null : t.capacity,
           order_limit: t.order_limit,
           perks: t.perks.filter((p) => p.trim()),
-          invite_password:
-            t.ticket_kind === 'invite' ? t.invite_password : null,
+          is_invite_only: t.is_invite_only,
+          invite_password: t.is_invite_only ? t.invite_password : null,
         }))
       );
 
@@ -259,13 +259,9 @@ export default function CreatePage() {
                   <label className="invite-toggle">
                     <input
                       type="checkbox"
-                      checked={ticket.ticket_kind === 'invite'}
+                      checked={ticket.is_invite_only}
                       onChange={(e) =>
-                        updateTicket(
-                          i,
-                          'ticket_kind',
-                          e.target.checked ? 'invite' : 'paid'
-                        )
+                        updateTicket(i, 'is_invite_only', e.target.checked)
                       }
                     />
                     <span>Invite-only</span>
@@ -298,7 +294,7 @@ export default function CreatePage() {
                   </div>
                 )}
 
-                {ticket.ticket_kind === 'invite' && (
+                {ticket.is_invite_only && (
                   <div className="invite-password-block">
                     <label>Invite password</label>
                     <input
@@ -310,7 +306,9 @@ export default function CreatePage() {
                       }
                     />
                     <p className="invite-hint">
-                      Buyers will need this password to see and buy this ticket.
+                      {ticket.ticket_kind === 'free'
+                        ? 'Free, but only invited guests can claim it.'
+                        : 'Paid, but only invited guests can see and buy it.'}
                     </p>
                   </div>
                 )}
@@ -392,4 +390,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-              }
+}
