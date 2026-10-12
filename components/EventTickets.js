@@ -1,0 +1,98 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import InviteUnlocker from './InviteUnlocker';
+
+export default function EventTickets({ eventId, tickets }) {
+  const [unlockedIds, setUnlockedIds] = useState([]);
+
+  const normalTickets = tickets.filter((t) => t.ticket_kind !== 'invite');
+  const inviteTickets = tickets.filter((t) => t.ticket_kind === 'invite');
+
+  const visibleInviteTickets = inviteTickets.filter((t) =>
+    unlockedIds.includes(t.id)
+  );
+
+  const visibleTickets = [...normalTickets, ...visibleInviteTickets];
+
+  function handleUnlock(ids) {
+    setUnlockedIds(ids);
+  }
+
+  return (
+    <>
+      {visibleTickets.length === 0 && inviteTickets.length === 0 ? (
+        <p style={{ color: '#64748b' }}>No tickets available yet.</p>
+      ) : (
+        <div className="ticket-list">
+          {visibleTickets.map((t) => {
+            const remaining = t.capacity
+              ? t.capacity - (t.quantity_sold || 0)
+              : null;
+            const soldOut = remaining !== null && remaining <= 0;
+            const isFree = t.ticket_kind === 'free' || Number(t.price) === 0;
+            const isInvite = t.ticket_kind === 'invite';
+            const perks = Array.isArray(t.perks) ? t.perks : [];
+
+            return (
+              <div key={t.id} className="ticket-row">
+                <div className="ticket-row-main">
+                  <div className="ticket-name">
+                    {t.name}
+                    {isInvite && (
+                      <span className="ticket-badge invite">Invite-only</span>
+                    )}
+                  </div>
+                  <div className="ticket-desc">
+                    {t.description || 'General admission'}
+                  </div>
+
+                  {perks.length > 0 && (
+                    <ul className="ticket-perks">
+                      {perks.map((p, idx) => (
+                        <li key={idx}>✓ {p}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {t.capacity && (
+                    <div className={`ticket-remaining ${soldOut ? 'sold-out' : ''}`}>
+                      {soldOut
+                        ? 'Sold out'
+                        : `${remaining} of ${t.capacity} remaining`}
+                    </div>
+                  )}
+                  {t.order_limit && t.order_limit > 1 && (
+                    <div className="ticket-order-limit">
+                      Max {t.order_limit} per person
+                    </div>
+                  )}
+                </div>
+                <div className="ticket-right">
+                  <div className="ticket-price">
+                    {isFree ? 'Free' : `₦${Number(t.price).toLocaleString()}`}
+                  </div>
+                  {soldOut ? (
+                    <span className="ticket-soldout-btn">Sold out</span>
+                  ) : (
+                    <Link
+                      href={`/checkout/${eventId}/${t.id}`}
+                      className="ticket-buy"
+                    >
+                      Buy
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {inviteTickets.length > 0 && (
+        <InviteUnlocker inviteTickets={inviteTickets} onUnlock={handleUnlock} />
+      )}
+    </>
+  );
+}
