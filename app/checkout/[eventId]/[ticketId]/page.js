@@ -62,6 +62,31 @@ export default function CheckoutPage() {
     setPaying(true);
     setError('');
 
+    if (total === 0) {
+      try {
+        const res = await fetch('/api/paystack/free', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId,
+            ticketId,
+            quantity,
+            buyerEmail: user.email,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to register');
+
+        window.location.href = `/checkout/success?reference=${data.reference}`;
+      } catch (err) {
+        console.error('Free ticket error:', err);
+        setError(err.message || 'Failed to register');
+        setPaying(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
@@ -184,14 +209,18 @@ export default function CheckoutPage() {
           disabled={paying}
           className="checkout-pay-btn"
         >
-          {paying ? 'Redirecting to Paystack...' : `Pay ₦${total.toLocaleString()}`}
+          {paying
+            ? 'Please wait...'
+            : total === 0
+              ? 'Get free ticket'
+              : `Pay ₦${total.toLocaleString()}`}
         </button>
 
         <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center', marginTop: 12 }}>
-          Secure payment powered by Paystack
+          {total === 0 ? 'Free event — no payment required' : 'Secure payment powered by Paystack'}
         </p>
       </div>
       <Footer />
     </>
   );
-          }
+    }
