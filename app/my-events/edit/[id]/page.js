@@ -56,8 +56,9 @@ export default function EditEventPage() {
                 name: x.name,
                 description: x.description || '',
                 price: String(x.price || 0),
+                capacity: x.capacity ? String(x.capacity) : '',
               }))
-            : [{ name: '', description: '', price: '' }]
+            : [{ name: '', description: '', price: '', capacity: '' }]
         );
       } catch (err) {
         setError(err.message || 'Failed to load event');
@@ -86,7 +87,7 @@ export default function EditEventPage() {
   }
 
   function addTicket() {
-    setTickets([...tickets, { name: '', description: '', price: '' }]);
+    setTickets([...tickets, { name: '', description: '', price: '', capacity: '' }]);
   }
 
   function removeTicket(index) {
@@ -111,6 +112,14 @@ export default function EditEventPage() {
         setError('Add at least one ticket type');
         setSaving(false);
         return;
+      }
+
+      for (const t of validTickets) {
+        if (t.capacity && Number(t.capacity) < 1) {
+          setError(`Capacity for "${t.name}" must be at least 1`);
+          setSaving(false);
+          return;
+        }
       }
 
       let finalImageUrl = imageUrl;
@@ -142,7 +151,12 @@ export default function EditEventPage() {
           description,
           image_url: finalImageUrl,
         },
-        validTickets
+        validTickets.map((t) => ({
+          name: t.name,
+          description: t.description,
+          price: t.price,
+          capacity: t.capacity ? Number(t.capacity) : null,
+        }))
       );
 
       router.push('/my-events');
@@ -230,6 +244,10 @@ export default function EditEventPage() {
               </button>
             </div>
 
+            <p className="tickets-hint">
+              Capacity is optional. Leave it blank for unlimited tickets.
+            </p>
+
             {tickets.map((ticket, i) => (
               <div key={i} className="ticket-input-row">
                 <input
@@ -250,6 +268,13 @@ export default function EditEventPage() {
                   value={ticket.price}
                   onChange={(e) => updateTicket(i, 'price', e.target.value)}
                   min="0"
+                />
+                <input
+                  type="number"
+                  placeholder="Limit (optional)"
+                  value={ticket.capacity}
+                  onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
+                  min="1"
                 />
                 {tickets.length > 1 && (
                   <button
@@ -272,4 +297,4 @@ export default function EditEventPage() {
       <Footer />
     </>
   );
-          }
+              }
