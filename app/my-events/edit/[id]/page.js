@@ -53,12 +53,14 @@ export default function EditEventPage() {
         setTickets(
           t.length > 0
             ? t.map((x) => ({
+                id: x.id, // ← keep DB id so we can preserve sold count
                 name: x.name,
                 description: x.description || '',
                 price: String(x.price || 0),
                 capacity: x.capacity ? String(x.capacity) : '',
+                quantity_sold: x.quantity_sold || 0,
               }))
-            : [{ name: '', description: '', price: '', capacity: '' }]
+            : [{ name: '', description: '', price: '', capacity: '', quantity_sold: 0 }]
         );
       } catch (err) {
         setError(err.message || 'Failed to load event');
@@ -87,7 +89,10 @@ export default function EditEventPage() {
   }
 
   function addTicket() {
-    setTickets([...tickets, { name: '', description: '', price: '', capacity: '' }]);
+    setTickets([
+      ...tickets,
+      { name: '', description: '', price: '', capacity: '', quantity_sold: 0 },
+    ]);
   }
 
   function removeTicket(index) {
@@ -117,6 +122,16 @@ export default function EditEventPage() {
       for (const t of validTickets) {
         if (t.capacity && Number(t.capacity) < 1) {
           setError(`Capacity for "${t.name}" must be at least 1`);
+          setSaving(false);
+          return;
+        }
+        if (
+          t.capacity &&
+          Number(t.capacity) < Number(t.quantity_sold || 0)
+        ) {
+          setError(
+            `Capacity for "${t.name}" can't be lower than the ${t.quantity_sold} ticket(s) already sold`
+          );
           setSaving(false);
           return;
         }
@@ -152,6 +167,7 @@ export default function EditEventPage() {
           image_url: finalImageUrl,
         },
         validTickets.map((t) => ({
+          id: t.id || null, // pass the id so we can match
           name: t.name,
           description: t.description,
           price: t.price,
@@ -276,6 +292,11 @@ export default function EditEventPage() {
                   onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
                   min="1"
                 />
+                {ticket.quantity_sold > 0 && (
+                  <div className="ticket-sold-note">
+                    {ticket.quantity_sold} already sold
+                  </div>
+                )}
                 {tickets.length > 1 && (
                   <button
                     type="button"
@@ -297,4 +318,4 @@ export default function EditEventPage() {
       <Footer />
     </>
   );
-              }
+    }
