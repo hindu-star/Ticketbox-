@@ -239,28 +239,38 @@ export default function CreatePage() {
                   )}
                 </div>
 
-                <div className="kind-toggle">
-                  <button
-                    type="button"
-                    className={ticket.ticket_kind === 'free' ? 'kind active' : 'kind'}
-                    onClick={() => updateTicket(i, 'ticket_kind', 'free')}
-                  >
-                    Free
-                  </button>
-                  <button
-                    type="button"
-                    className={ticket.ticket_kind === 'paid' ? 'kind active' : 'kind'}
-                    onClick={() => updateTicket(i, 'ticket_kind', 'paid')}
-                  >
-                    Paid
-                  </button>
-                  <button
-                    type="button"
-                    className={ticket.ticket_kind === 'invite' ? 'kind active' : 'kind'}
-                    onClick={() => updateTicket(i, 'ticket_kind', 'invite')}
-                  >
-                    Invite-only
-                  </button>
+                {/* FIX 2 — Kind: Free / Paid buttons + Invite-only checkbox */}
+                <div className="kind-row">
+                  <div className="kind-toggle">
+                    <button
+                      type="button"
+                      className={ticket.ticket_kind === 'free' ? 'kind active' : 'kind'}
+                      onClick={() => updateTicket(i, 'ticket_kind', 'free')}
+                    >
+                      Free
+                    </button>
+                    <button
+                      type="button"
+                      className={ticket.ticket_kind === 'paid' ? 'kind active' : 'kind'}
+                      onClick={() => updateTicket(i, 'ticket_kind', 'paid')}
+                    >
+                      Paid
+                    </button>
+                  </div>
+                  <label className="invite-toggle">
+                    <input
+                      type="checkbox"
+                      checked={ticket.ticket_kind === 'invite'}
+                      onChange={(e) =>
+                        updateTicket(
+                          i,
+                          'ticket_kind',
+                          e.target.checked ? 'invite' : 'paid'
+                        )
+                      }
+                    />
+                    <span>Invite-only</span>
+                  </label>
                 </div>
 
                 <input
@@ -276,17 +286,22 @@ export default function CreatePage() {
                   onChange={(e) => updateTicket(i, 'description', e.target.value)}
                 />
 
+                {/* FIX 3 — Price field with ₦ symbol inline */}
                 {ticket.ticket_kind === 'paid' && (
-                  <input
-                    type="number"
-                    placeholder="Price (₦)"
-                    value={ticket.price}
-                    onChange={(e) => updateTicket(i, 'price', e.target.value)}
-                    min="0"
-                  />
+                  <div className="price-input-wrap">
+                    <span className="price-prefix">₦</span>
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={ticket.price}
+                      onChange={(e) => updateTicket(i, 'price', e.target.value)}
+                      min="0"
+                    />
+                  </div>
                 )}
 
-                <div className="quantity-row-form">
+                {/* FIX 1 — Quantity: stacked on mobile, no overflow */}
+                <div className="quantity-block">
                   <select
                     value={ticket.unlimited ? 'unlimited' : 'limited'}
                     onChange={(e) =>
@@ -297,7 +312,7 @@ export default function CreatePage() {
                     <option value="unlimited">Unlimited quantity</option>
                   </select>
 
-                  {!ticket.unlimited && (
+                  {!ticket.unlimited ? (
                     <input
                       type="number"
                       placeholder="How many?"
@@ -305,8 +320,7 @@ export default function CreatePage() {
                       onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
                       min="1"
                     />
-                  )}
-                  {ticket.unlimited && (
+                  ) : (
                     <div className="unlimited-badge">∞</div>
                   )}
                 </div>
@@ -364,4 +378,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-  }
+              }
