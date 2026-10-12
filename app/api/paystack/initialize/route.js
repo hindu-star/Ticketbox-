@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { initializeTransaction, generateReference } from '@/lib/paystack';
+import { initializeTransaction, generateReference } from '../../../../../lib/paystack';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -15,6 +15,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
+    // Fetch the ticket type
     const { data: ticket, error: ticketError } = await supabase
       .from('ticket_types')
       .select('*')
@@ -23,6 +24,26 @@ export async function POST(request) {
 
     if (ticketError || !ticket) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
+    }
+
+    // Check capacity
+    if (ticket.capacity) {
+      const sold = ticket.quantity_sold || 0;
+      const remaining = ticket.capacity - sold;
+
+      if (remaining <= 0) {
+        return NextResponse.json(
+          { error: 'This ticket is sold out' },
+          { status: 400 }
+        );
+      }
+
+      if (quantity > remaining) {
+        return NextResponse.json(
+          { error: `Only ${remaining} ticket${remaining === 1 ? '' : 's'} left` },
+          { status: 400 }
+        );
+      }
     }
 
     const subtotal = Number(ticket.price) * quantity;
@@ -74,4 +95,4 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-                             }
+}
