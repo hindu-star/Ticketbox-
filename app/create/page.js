@@ -16,7 +16,7 @@ export default function CreatePage() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
   const [tickets, setTickets] = useState([
-    { name: 'Regular', description: 'General admission', price: '' },
+    { name: 'Regular', description: 'General admission', price: '', capacity: '' },
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,7 +40,7 @@ export default function CreatePage() {
   }
 
   function addTicket() {
-    setTickets([...tickets, { name: '', description: '', price: '' }]);
+    setTickets([...tickets, { name: '', description: '', price: '', capacity: '' }]);
   }
 
   function removeTicket(index) {
@@ -66,6 +66,15 @@ export default function CreatePage() {
         setError('Add at least one ticket type');
         setLoading(false);
         return;
+      }
+
+      // Validate capacity if provided
+      for (const t of validTickets) {
+        if (t.capacity && Number(t.capacity) < 1) {
+          setError(`Capacity for "${t.name}" must be at least 1`);
+          setLoading(false);
+          return;
+        }
       }
 
       let imageUrl = null;
@@ -97,7 +106,12 @@ export default function CreatePage() {
           emoji: '🎉',
           organizer_id: user.id,
         },
-        validTickets
+        validTickets.map((t) => ({
+          name: t.name,
+          description: t.description,
+          price: t.price,
+          capacity: t.capacity ? Number(t.capacity) : null,
+        }))
       );
 
       router.push(`/event/${newEvent.id}`);
@@ -173,6 +187,10 @@ export default function CreatePage() {
               </button>
             </div>
 
+            <p className="tickets-hint">
+              Capacity is optional. Leave it blank for unlimited tickets.
+            </p>
+
             {tickets.map((ticket, i) => (
               <div key={i} className="ticket-input-row">
                 <input
@@ -193,6 +211,13 @@ export default function CreatePage() {
                   value={ticket.price}
                   onChange={(e) => updateTicket(i, 'price', e.target.value)}
                   min="0"
+                />
+                <input
+                  type="number"
+                  placeholder="Limit (optional)"
+                  value={ticket.capacity}
+                  onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
+                  min="1"
                 />
                 {tickets.length > 1 && (
                   <button
@@ -215,4 +240,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-              }
+               }
