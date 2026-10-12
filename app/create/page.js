@@ -17,6 +17,7 @@ function emptyTicket() {
     unlimited: false,
     order_limit: 10,
     perks: [],
+    invite_password: '',
   };
 }
 
@@ -51,19 +52,7 @@ export default function CreatePage() {
   }
 
   function addTicket() {
-    setTickets([
-      ...tickets,
-      {
-        name: '',
-        description: '',
-        ticket_kind: 'paid',
-        price: '',
-        capacity: '',
-        unlimited: false,
-        order_limit: 10,
-        perks: [],
-      },
-    ]);
+    setTickets([...tickets, emptyTicket()]);
   }
 
   function removeTicket(index) {
@@ -111,6 +100,15 @@ export default function CreatePage() {
         return;
       }
 
+      // Validate invite tickets have a password
+      for (const t of validTickets) {
+        if (t.ticket_kind === 'invite' && !t.invite_password.trim()) {
+          setError(`Invite ticket "${t.name}" needs a password`);
+          setLoading(false);
+          return;
+        }
+      }
+
       let imageUrl = null;
       if (file) {
         const fileExt = file.name.split('.').pop();
@@ -148,6 +146,8 @@ export default function CreatePage() {
           capacity: t.unlimited ? null : t.capacity,
           order_limit: t.order_limit,
           perks: t.perks.filter((p) => p.trim()),
+          invite_password:
+            t.ticket_kind === 'invite' ? t.invite_password : null,
         }))
       );
 
@@ -239,7 +239,6 @@ export default function CreatePage() {
                   )}
                 </div>
 
-                {/* FIX 2 — Kind: Free / Paid buttons + Invite-only checkbox */}
                 <div className="kind-row">
                   <div className="kind-toggle">
                     <button
@@ -286,7 +285,6 @@ export default function CreatePage() {
                   onChange={(e) => updateTicket(i, 'description', e.target.value)}
                 />
 
-                {/* FIX 3 — Price field with ₦ symbol inline */}
                 {ticket.ticket_kind === 'paid' && (
                   <div className="price-input-wrap">
                     <span className="price-prefix">₦</span>
@@ -300,7 +298,23 @@ export default function CreatePage() {
                   </div>
                 )}
 
-                {/* FIX 1 — Quantity: stacked on mobile, no overflow */}
+                {ticket.ticket_kind === 'invite' && (
+                  <div className="invite-password-block">
+                    <label>Invite password</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. vip2026"
+                      value={ticket.invite_password}
+                      onChange={(e) =>
+                        updateTicket(i, 'invite_password', e.target.value)
+                      }
+                    />
+                    <p className="invite-hint">
+                      Buyers will need this password to see and buy this ticket.
+                    </p>
+                  </div>
+                )}
+
                 <div className="quantity-block">
                   <select
                     value={ticket.unlimited ? 'unlimited' : 'limited'}
