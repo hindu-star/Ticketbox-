@@ -764,3 +764,29 @@ a.blog-card { display: block; color: inherit; }
   font-size: 56px;
   margin-bottom: 16px;
 }
+/* TICKET CAPACITY */
+.tickets-hint {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-bottom: 12px;
+  font-style: italic;
+}
+.ticket-remaining {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 4px;
+  font-weight: 500;
+}
+.ticket-remaining.sold-out {
+  color: #b91c1c;
+  font-weight: 700;
+}
+.ticket-soldout-btn {
+  padding: 10px 20px;
+  background: #e2e8f0;
+  color: #94a3b8;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: not-allowed;
+}
