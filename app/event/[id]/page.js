@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import ShareButton from '../../../components/ShareButton';
+import EventTickets from '../../../components/EventTickets';
 import { getEvent, getTicketTypes } from '../../../lib/events';
 
 export default async function EventPage({ params }) {
@@ -51,78 +51,10 @@ export default async function EventPage({ params }) {
           </p>
 
           <h2 className="ticket-heading">Tickets</h2>
-          <div className="ticket-list">
-            {tickets.length === 0 ? (
-              <p style={{ color: '#64748b' }}>No tickets available yet.</p>
-            ) : (
-              tickets.map((t) => {
-                const remaining = t.capacity
-                  ? t.capacity - (t.quantity_sold || 0)
-                  : null;
-                const soldOut = remaining !== null && remaining <= 0;
-                const isFree = t.ticket_kind === 'free' || Number(t.price) === 0;
-                const isInvite = t.ticket_kind === 'invite';
-                const perks = Array.isArray(t.perks) ? t.perks : [];
-
-                return (
-                  <div key={t.id} className="ticket-row">
-                    <div className="ticket-row-main">
-                      <div className="ticket-name">
-                        {t.name}
-                        {t.ticket_kind === 'invite' && (
-                          <span className="ticket-badge">Invite-only</span>
-                        )}
-                      </div>
-                      <div className="ticket-desc">
-                        {t.description || 'General admission'}
-                      </div>
-
-                      {perks.length > 0 && (
-                        <ul className="ticket-perks">
-                          {perks.map((p, idx) => (
-                            <li key={idx}>✓ {p}</li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {t.capacity && (
-                        <div className={`ticket-remaining ${soldOut ? 'sold-out' : ''}`}>
-                          {soldOut
-                            ? 'Sold out'
-                            : `${remaining} of ${t.capacity} remaining`}
-                        </div>
-                      )}
-                      {t.order_limit && t.order_limit > 1 && (
-                        <div className="ticket-order-limit">
-                          Max {t.order_limit} per person
-                        </div>
-                      )}
-                    </div>
-                    <div className="ticket-right">
-                      <div className="ticket-price">
-                        {isFree ? 'Free' : `₦${Number(t.price).toLocaleString()}`}
-                      </div>
-                      {soldOut ? (
-                        <span className="ticket-soldout-btn">Sold out</span>
-                      ) : isInvite ? (
-                        <span className="ticket-soldout-btn">Invite only</span>
-                      ) : (
-                        <Link
-                          href={`/checkout/${event.id}/${t.id}`}
-                          className="ticket-buy"
-                        >
-                          Buy
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          <EventTickets eventId={event.id} tickets={tickets} />
         </div>
       </div>
       <Footer />
     </>
   );
-          }
+}
