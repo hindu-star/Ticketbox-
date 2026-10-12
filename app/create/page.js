@@ -7,6 +7,19 @@ import Footer from '../../components/Footer';
 import { supabase } from '../../lib/supabase';
 import { createEvent } from '../../lib/events';
 
+function emptyTicket() {
+  return {
+    name: 'Regular',
+    description: 'General admission',
+    ticket_kind: 'paid',
+    price: '',
+    capacity: '',
+    unlimited: false,
+    order_limit: 10,
+    perks: [],
+  };
+}
+
 export default function CreatePage() {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
@@ -15,9 +28,7 @@ export default function CreatePage() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
-  const [tickets, setTickets] = useState([
-    { name: 'Regular', description: 'General admission', price: '', capacity: '' },
-  ]);
+  const [tickets, setTickets] = useState([emptyTicket()]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -40,12 +51,44 @@ export default function CreatePage() {
   }
 
   function addTicket() {
-    setTickets([...tickets, { name: '', description: '', price: '', capacity: '' }]);
+    setTickets([
+      ...tickets,
+      {
+        name: '',
+        description: '',
+        ticket_kind: 'paid',
+        price: '',
+        capacity: '',
+        unlimited: false,
+        order_limit: 10,
+        perks: [],
+      },
+    ]);
   }
 
   function removeTicket(index) {
     if (tickets.length === 1) return;
     setTickets(tickets.filter((_, i) => i !== index));
+  }
+
+  function addPerk(ticketIndex) {
+    const updated = [...tickets];
+    updated[ticketIndex].perks = [...updated[ticketIndex].perks, ''];
+    setTickets(updated);
+  }
+
+  function updatePerk(ticketIndex, perkIndex, value) {
+    const updated = [...tickets];
+    updated[ticketIndex].perks[perkIndex] = value;
+    setTickets(updated);
+  }
+
+  function removePerk(ticketIndex, perkIndex) {
+    const updated = [...tickets];
+    updated[ticketIndex].perks = updated[ticketIndex].perks.filter(
+      (_, i) => i !== perkIndex
+    );
+    setTickets(updated);
   }
 
   async function handleSubmit(e) {
@@ -66,15 +109,6 @@ export default function CreatePage() {
         setError('Add at least one ticket type');
         setLoading(false);
         return;
-      }
-
-      // Validate capacity if provided
-      for (const t of validTickets) {
-        if (t.capacity && Number(t.capacity) < 1) {
-          setError(`Capacity for "${t.name}" must be at least 1`);
-          setLoading(false);
-          return;
-        }
       }
 
       let imageUrl = null;
@@ -109,8 +143,11 @@ export default function CreatePage() {
         validTickets.map((t) => ({
           name: t.name,
           description: t.description,
-          price: t.price,
-          capacity: t.capacity ? Number(t.capacity) : null,
+          ticket_kind: t.ticket_kind,
+          price: t.ticket_kind === 'paid' ? t.price : 0,
+          capacity: t.unlimited ? null : t.capacity,
+          order_limit: t.order_limit,
+          perks: t.perks.filter((p) => p.trim()),
         }))
       );
 
@@ -125,7 +162,7 @@ export default function CreatePage() {
   return (
     <>
       <Navbar />
-      <div className="auth-page" style={{ maxWidth: 560 }}>
+      <div className="auth-page" style={{ maxWidth: 600 }}>
         <h1>Create an event</h1>
         <p>Fill in the details and start selling tickets.</p>
 
@@ -187,15 +224,48 @@ export default function CreatePage() {
               </button>
             </div>
 
-            <p className="tickets-hint">
-              Capacity is optional. Leave it blank for unlimited tickets.
-            </p>
-
             {tickets.map((ticket, i) => (
-              <div key={i} className="ticket-input-row">
+              <div key={i} className="ticket-block">
+                <div className="ticket-block-header">
+                  <span>Ticket {i + 1}</span>
+                  {tickets.length > 1 && (
+                    <button
+                      type="button"
+                      className="remove-ticket-btn"
+                      onClick={() => removeTicket(i)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="kind-toggle">
+                  <button
+                    type="button"
+                    className={ticket.ticket_kind === 'free' ? 'kind active' : 'kind'}
+                    onClick={() => updateTicket(i, 'ticket_kind', 'free')}
+                  >
+                    Free
+                  </button>
+                  <button
+                    type="button"
+                    className={ticket.ticket_kind === 'paid' ? 'kind active' : 'kind'}
+                    onClick={() => updateTicket(i, 'ticket_kind', 'paid')}
+                  >
+                    Paid
+                  </button>
+                  <button
+                    type="button"
+                    className={ticket.ticket_kind === 'invite' ? 'kind active' : 'kind'}
+                    onClick={() => updateTicket(i, 'ticket_kind', 'invite')}
+                  >
+                    Invite-only
+                  </button>
+                </div>
+
                 <input
                   type="text"
-                  placeholder="Name (e.g. VIP)"
+                  placeholder="Ticket name (e.g. VIP)"
                   value={ticket.name}
                   onChange={(e) => updateTicket(i, 'name', e.target.value)}
                 />
@@ -205,29 +275,83 @@ export default function CreatePage() {
                   value={ticket.description}
                   onChange={(e) => updateTicket(i, 'description', e.target.value)}
                 />
-                <input
-                  type="number"
-                  placeholder="Price (₦)"
-                  value={ticket.price}
-                  onChange={(e) => updateTicket(i, 'price', e.target.value)}
-                  min="0"
-                />
-                <input
-                  type="number"
-                  placeholder="Limit (optional)"
-                  value={ticket.capacity}
-                  onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
-                  min="1"
-                />
-                {tickets.length > 1 && (
+
+                {ticket.ticket_kind === 'paid' && (
+                  <input
+                    type="number"
+                    placeholder="Price (₦)"
+                    value={ticket.price}
+                    onChange={(e) => updateTicket(i, 'price', e.target.value)}
+                    min="0"
+                  />
+                )}
+
+                <div className="quantity-row-form">
+                  <select
+                    value={ticket.unlimited ? 'unlimited' : 'limited'}
+                    onChange={(e) =>
+                      updateTicket(i, 'unlimited', e.target.value === 'unlimited')
+                    }
+                  >
+                    <option value="limited">Limited quantity</option>
+                    <option value="unlimited">Unlimited quantity</option>
+                  </select>
+
+                  {!ticket.unlimited && (
+                    <input
+                      type="number"
+                      placeholder="How many?"
+                      value={ticket.capacity}
+                      onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
+                      min="1"
+                    />
+                  )}
+                  {ticket.unlimited && (
+                    <div className="unlimited-badge">∞</div>
+                  )}
+                </div>
+
+                <div className="order-limit-row">
+                  <label>Order limit per person</label>
+                  <select
+                    value={ticket.order_limit}
+                    onChange={(e) =>
+                      updateTicket(i, 'order_limit', Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 50].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="perks-section">
+                  <label>Perks (optional)</label>
+                  {ticket.perks.map((perk, j) => (
+                    <div key={j} className="perk-row">
+                      <input
+                        type="text"
+                        placeholder="e.g. Free drink"
+                        value={perk}
+                        onChange={(e) => updatePerk(i, j, e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePerk(i, j)}
+                        className="perk-remove"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                   <button
                     type="button"
-                    className="remove-ticket-btn"
-                    onClick={() => removeTicket(i)}
+                    className="add-perk-btn"
+                    onClick={() => addPerk(i)}
                   >
-                    ×
+                    + Add perk
                   </button>
-                )}
+                </div>
               </div>
             ))}
           </div>
@@ -240,4 +364,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-               }
+  }
