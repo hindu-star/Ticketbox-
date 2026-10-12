@@ -51,27 +51,45 @@ export default async function EventPage({ params }) {
             {tickets.length === 0 ? (
               <p style={{ color: '#64748b' }}>No tickets available yet.</p>
             ) : (
-              tickets.map((t) => (
-                <div key={t.id} className="ticket-row">
-                  <div>
-                    <div className="ticket-name">{t.name}</div>
-                    <div className="ticket-desc">
-                      {t.description || 'General admission'}
+              tickets.map((t) => {
+                const remaining = t.capacity
+                  ? t.capacity - (t.quantity_sold || 0)
+                  : null;
+                const soldOut = remaining !== null && remaining <= 0;
+
+                return (
+                  <div key={t.id} className="ticket-row">
+                    <div>
+                      <div className="ticket-name">{t.name}</div>
+                      <div className="ticket-desc">
+                        {t.description || 'General admission'}
+                      </div>
+                      {t.capacity && (
+                        <div className={`ticket-remaining ${soldOut ? 'sold-out' : ''}`}>
+                          {soldOut
+                            ? 'Sold out'
+                            : `${remaining} of ${t.capacity} remaining`}
+                        </div>
+                      )}
+                    </div>
+                    <div className="ticket-right">
+                      <div className="ticket-price">
+                        {t.price > 0 ? `₦${Number(t.price).toLocaleString()}` : 'Free'}
+                      </div>
+                      {soldOut ? (
+                        <span className="ticket-soldout-btn">Sold out</span>
+                      ) : (
+                        <Link
+                          href={`/checkout/${event.id}/${t.id}`}
+                          className="ticket-buy"
+                        >
+                          Buy
+                        </Link>
+                      )}
                     </div>
                   </div>
-                  <div className="ticket-right">
-                    <div className="ticket-price">
-                      {t.price > 0 ? `₦${Number(t.price).toLocaleString()}` : 'Free'}
-                    </div>
-                    <Link
-                      href={`/checkout/${event.id}/${t.id}`}
-                      className="ticket-buy"
-                    >
-                      Buy
-                    </Link>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -79,4 +97,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-}
+                  }
