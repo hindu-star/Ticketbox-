@@ -1,100 +1,228 @@
-import { notFound } from 'next/navigation';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navbar from '../../../components/Navbar';
-import Footer from '../../../components/Footer';
-import { getEvent, getTicketTypes } from '../../../lib/events';
+import Navbar from '../../../../components/Navbar';
+import Footer from '../../../../components/Footer';
+import { supabase } from '../../../../lib/supabase';
+import { getEvent, getTicketTypes } from '../../../../lib/events';
 
-export default async function EventPage({ params }) {
-  let event;
-  let tickets = [];
+export default function CheckoutPage() {
+  const params = useParams();
+  const router = useRouter();
 
-  try {
-    event = await getEvent(params.id);
-    tickets = await getTicketTypes(params.id);
-  } catch (err) {
-    notFound();
+  const eventId = params?.eventId;
+  const ticketId = params?.ticketId;
+
+  const [event, setEvent] = useState(null);
+  const [ticket, setTicket] = useState(null);
+  const [user, setUser] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!eventId || !ticketId) return;
+
+    async function load() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          router.push(`/login?next=/checkout/${eventId}/${ticketId}`);
+          return;
+        }
+        setUser(user);
+
+        const ev = await getEvent(eventId);
+        setEvent(ev);
+
+        const tickets = await getTicketTypes(eventId);
+        const t = tickets.find((x) => x.id === ticketId);
+
+        if (!t) throw new Error('Ticket not found');
+        setTicket(t);
+      } catch (err) {
+        console.error('Checkout load error:', err);
+        setError(err.message || 'Failed to load checkout');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [eventId, ticketId, router]);
+
+  const subtotal = ticket ? Number(ticket.price) * quantity : 0;
+  const serviceFee = Math.round(subtotal * 0.05);
+  const total = subtotal + serviceFee;
+
+  async function handlePay() {
+    setPaying(true);
+    setError('');
+
+    // Free ticket — skip Paystack
+    if (total === 0) {
+      try {
+        const res = await fetch('/api/paystack/free', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId,
+            ticketId,
+            quantity,
+            buyerEmail: user.email,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to register');
+
+        window.location.href = `/checkout/success?reference=${data.reference}`;
+      } catch (err) {
+        console.error('Free ticket error:', err);
+        setError(err.message || 'Failed to register');
+        setPaying(false);
+      }
+      return;
+    }
+
+    // Paid ticket — go through Paystack
+    try {
+      const res = await fetch('/api/paystack/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId,
+          ticketId,
+          quantity,
+          buyerEmail: user.email,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Payment init failed');
+
+      window.location.href = data.authorization_url;
+    } catch (err) {
+      console.error('Pay error:', err);
+      setError(err.message || 'Payment failed to start');
+      setPaying(false);
+    }
   }
 
-  if (!event) notFound();
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="auth-page">
+          <p style={{ color: '#64748b' }}>Loading checkout...</p>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
-  const formattedDate = event.event_date
-    ? new Date(event.event_date).toLocaleDateString('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : 'Date coming soon';
+  if (error && !event) {
+    return (
+      <>
+        <Navbar />
+        <div className="auth-page">
+          <div className="auth-error">{error}</div>
+          <Link href="/browse" className="content-btn-secondary">Back to events</Link>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!event || !ticket) {
+    return (
+      <>
+        <Navbar />
+        <div className="auth-page">
+          <p>Loading...</p>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
-      <div className="event-detail">
-        {event.image_url ? (
-          <img src={event.image_url} alt={event.title} className="event-hero-img" />
-        ) : (
-          <div className="event-hero">{event.emoji || '🎉'}</div>
-        )}
-        <div className="event-info">
-          <h1>{event.title}</h1>
-          <div className="event-meta">
-            <div>📅 {formattedDate}</div>
-            <div>🕐 {event.event_time || 'Time TBA'}</div>
-            <div>📍 {event.location}</div>
-          </div>
-          <p className="event-desc">
-            {event.description || 'Full details coming soon.'}
-          </p>
+      <div className="auth-page" style={{ maxWidth: 520 }}>
+        <h1>Checkout</h1>
+        <p>Review your order and complete payment.</p>
 
-          <h2 className="ticket-heading">Tickets</h2>
-          <div className="ticket-list">
-            {tickets.length === 0 ? (
-              <p style={{ color: '#64748b' }}>No tickets available yet.</p>
-            ) : (
-              tickets.map((t) => {
-                const remaining = t.capacity
-                  ? t.capacity - (t.quantity_sold || 0)
-                  : null;
-                const soldOut = remaining !== null && remaining <= 0;
+        {error && <div className="auth-error">{error}</div>}
 
-                return (
-                  <div key={t.id} className="ticket-row">
-                    <div>
-                      <div className="ticket-name">{t.name}</div>
-                      <div className="ticket-desc">
-                        {t.description || 'General admission'}
-                      </div>
-                      {t.capacity && (
-                        <div className={`ticket-remaining ${soldOut ? 'sold-out' : ''}`}>
-                          {soldOut
-                            ? 'Sold out'
-                            : `${remaining} of ${t.capacity} remaining`}
-                        </div>
-                      )}
-                    </div>
-                    <div className="ticket-right">
-                      <div className="ticket-price">
-                        {t.price > 0 ? `₦${Number(t.price).toLocaleString()}` : 'Free'}
-                      </div>
-                      {soldOut ? (
-                        <span className="ticket-soldout-btn">Sold out</span>
-                      ) : (
-                        <Link
-                          href={`/checkout/${event.id}/${t.id}`}
-                          className="ticket-buy"
-                        >
-                          Buy
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
+        <div className="checkout-card">
+          <div className="checkout-event-title">{event.title}</div>
+          <div className="checkout-event-meta">📍 {event.location}</div>
+        </div>
+
+        <div className="checkout-card">
+          <div className="checkout-ticket-name">{ticket.name}</div>
+          {ticket.description && (
+            <div className="checkout-ticket-desc">{ticket.description}</div>
+          )}
+
+          <div className="quantity-row">
+            <span>Quantity</span>
+            <div className="quantity-controls">
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+              >
+                −
+              </button>
+              <span className="quantity-value">{quantity}</span>
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                disabled={quantity >= 10}
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
+
+        <div className="checkout-summary">
+          <div className="summary-row">
+            <span>Subtotal ({quantity} × ₦{Number(ticket.price).toLocaleString()})</span>
+            <span>₦{subtotal.toLocaleString()}</span>
+          </div>
+          <div className="summary-row">
+            <span>Service fee (5%)</span>
+            <span>₦{serviceFee.toLocaleString()}</span>
+          </div>
+          <div className="summary-row summary-total">
+            <span>Total</span>
+            <span>₦{total.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handlePay}
+          disabled={paying}
+          className="checkout-pay-btn"
+        >
+          {paying
+            ? 'Please wait...'
+            : total === 0
+              ? 'Get free ticket'
+              : `Pay ₦${total.toLocaleString()}`}
+        </button>
+
+        <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center', marginTop: 12 }}>
+          {total === 0 ? 'Free event — no payment required' : 'Secure payment powered by Paystack'}
+        </p>
       </div>
       <Footer />
     </>
   );
-                  }
+      }
