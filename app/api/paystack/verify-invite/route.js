@@ -24,7 +24,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
-    if (ticket.ticket_kind !== 'invite') {
+    if (!ticket.is_invite_only) {
       return NextResponse.json({ error: 'Not an invite ticket' }, { status: 400 });
     }
 
