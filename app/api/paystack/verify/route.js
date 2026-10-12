@@ -17,6 +17,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Missing reference' }, { status: 400 });
     }
 
+    console.log('Verify called with reference:', reference);
+
     let order = null;
 
     if (reference.startsWith('TB-FREE-')) {
@@ -26,6 +28,7 @@ export async function GET(request) {
         .eq('paystack_reference', reference)
         .single();
       order = data;
+      console.log('Free ticket order found:', !!order);
     } else {
       const paystackData = await verifyTransaction(reference);
 
@@ -68,7 +71,8 @@ export async function GET(request) {
       }
     }
 
-    // Send ticket email
+    console.log('About to send email. Order exists:', !!order);
+
     if (order) {
       try {
         const { data: event } = await supabase
@@ -83,8 +87,12 @@ export async function GET(request) {
           .eq('id', order.ticket_type_id)
           .single();
 
+        console.log('Event found:', !!event, '| Ticket found:', !!ticket);
+        console.log('Buyer email:', order.buyer_email);
+
         if (event && ticket) {
-          await sendTicketEmail({
+          console.log('Calling sendTicketEmail now...');
+          const emailResult = await sendTicketEmail({
             to: order.buyer_email,
             name: order.buyer_email.split('@')[0],
             event,
@@ -93,9 +101,11 @@ export async function GET(request) {
             quantity: order.quantity,
             total: order.total,
           });
+          console.log('Email result:', JSON.stringify(emailResult));
         }
       } catch (emailErr) {
-        console.error('Ticket email failed:', emailErr);
+        console.error('TICKET EMAIL FAILED:', emailErr.message || emailErr);
+        console.error('Full error:', JSON.stringify(emailErr, null, 2));
       }
     }
 
