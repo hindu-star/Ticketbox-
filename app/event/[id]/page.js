@@ -46,9 +46,13 @@ export default async function EventPage({ params }) {
             <div>🕐 {event.event_time || 'Time TBA'}</div>
             <div>📍 {event.location}</div>
           </div>
-          <p className="event-desc">
-            {event.description || 'Full details coming soon.'}
-          </p>
+
+          <div
+            className="event-desc"
+            dangerouslySetInnerHTML={{
+              __html: event.description || '<p>Full details coming soon.</p>',
+            }}
+          />
 
           <h2 className="ticket-heading">Tickets</h2>
           <EventTickets eventId={event.id} tickets={tickets} />
@@ -57,4 +61,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-}
+            }
