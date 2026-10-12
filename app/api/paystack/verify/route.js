@@ -1,4 +1,4 @@
-import { import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTransaction } from '../../../../lib/paystack';
 
