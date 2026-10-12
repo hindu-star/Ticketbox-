@@ -810,3 +810,13 @@ a.blog-card { display: block; color: inherit; }
   background: var(--blue);
   color: #fff;
 }
+.ticket-sold-note {
+  font-size: 12px;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 4px;
+  grid-column: 1 / -1;
+}
