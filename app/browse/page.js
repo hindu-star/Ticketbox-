@@ -1,7 +1,7 @@
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import EventCard from '../../components/EventCard';
-import { getEvents } from '../../lib/events';
+import { getEvents, addSoldOutFlags } from '../../lib/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,8 @@ export default async function BrowsePage() {
   let events = [];
 
   try {
-    events = await getEvents();
+    const all = await getEvents();
+    events = await addSoldOutFlags(all);
   } catch (err) {
     console.error('Failed to load events:', err);
   }
@@ -33,6 +34,7 @@ export default async function BrowsePage() {
                   id: e.id,
                   emoji: e.emoji || '🎉',
                   image_url: e.image_url,
+                  soldOut: e.soldOut,
                   date: e.event_date
                     ? new Date(e.event_date).toLocaleDateString('en-GB', {
                         day: 'numeric', month: 'short', year: 'numeric',
@@ -40,7 +42,7 @@ export default async function BrowsePage() {
                     : 'Date TBA',
                   title: e.title,
                   location: e.location,
-                  price: 'View tickets →',
+                  price: e.soldOut ? 'Sold out' : 'View tickets →',
                 }}
               />
             ))}
