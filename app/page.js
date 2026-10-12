@@ -11,7 +11,7 @@ export default async function HomePage() {
 
   try {
     const all = await getEvents();
-    events = all.slice(0, 4);
+    events = all.slice(0, 10);
   } catch (err) {
     console.error('Failed to load events:', err);
   }
@@ -36,26 +36,34 @@ export default async function HomePage() {
             <p>No events yet. <Link href="/create">Be the first to create one!</Link></p>
           </div>
         ) : (
-          <div className="events-grid">
-            {events.map((e) => (
-              <EventCard
-                key={e.id}
-                event={{
-                  id: e.id,
-                  emoji: e.emoji || '🎉',
-                  image_url: e.image_url,
-                  date: e.event_date
-                    ? new Date(e.event_date).toLocaleDateString('en-GB', {
-                        day: 'numeric', month: 'short', year: 'numeric',
-                      })
-                    : 'Date TBA',
-                  title: e.title,
-                  location: e.location,
-                  price: 'View tickets →',
-                }}
-              />
-            ))}
-          </div>
+          <>
+            <div className="events-grid">
+              {events.map((e) => (
+                <EventCard
+                  key={e.id}
+                  event={{
+                    id: e.id,
+                    emoji: e.emoji || '🎉',
+                    image_url: e.image_url,
+                    date: e.event_date
+                      ? new Date(e.event_date).toLocaleDateString('en-GB', {
+                          day: 'numeric', month: 'short', year: 'numeric',
+                        })
+                      : 'Date TBA',
+                    title: e.title,
+                    location: e.location,
+                    price: e.price > 0 ? `From ₦${Number(e.price).toLocaleString()}` : 'View tickets →',
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="see-all-wrap">
+              <Link href="/browse" className="see-all-btn">
+                See all events →
+              </Link>
+            </div>
+          </>
         )}
       </section>
 
