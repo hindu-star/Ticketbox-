@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { verifyTransaction } from '@/lib/paystack';
+import { verifyTransaction } from '../../../../../lib/paystack';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -25,6 +25,14 @@ export async function GET(request) {
       );
     }
 
+    // Find the order
+    const { data: existingOrder } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('paystack_reference', reference)
+      .single();
+
+    // Mark as paid
     const { data: order, error } = await supabase
       .from('orders')
       .update({ status: 'paid' })
@@ -34,6 +42,24 @@ export async function GET(request) {
 
     if (error) {
       console.error('Order update error:', error);
+    }
+
+    // Increment quantity_sold if we haven't already
+    if (existingOrder && existingOrder.status !== 'paid') {
+      const { data: ticket } = await supabase
+        .from('ticket_types')
+        .select('*')
+        .eq('id', existingOrder.ticket_type_id)
+        .single();
+
+      if (ticket) {
+        const newSold = (ticket.quantity_sold || 0) + existingOrder.quantity;
+
+        await supabase
+          .from('ticket_types')
+          .update({ quantity_sold: newSold })
+          .eq('id', ticket.id);
+      }
     }
 
     return NextResponse.json({
@@ -51,4 +77,4 @@ export async function GET(request) {
       { status: 500 }
     );
   }
-  }
+}
