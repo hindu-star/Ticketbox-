@@ -7,6 +7,22 @@ import Footer from '../../../../components/Footer';
 import { supabase } from '../../../../lib/supabase';
 import { getEvent, getTicketTypes, updateEvent } from '../../../../lib/events';
 
+function emptyTicket() {
+  return {
+    name: '',
+    description: '',
+    ticket_kind: 'paid',
+    price: '',
+    capacity: '',
+    unlimited: false,
+    order_limit: 10,
+    perks: [],
+    is_invite_only: false,
+    invite_password: '',
+    quantity_sold: 0,
+  };
+}
+
 export default function EditEventPage() {
   const router = useRouter();
   const params = useParams();
@@ -53,14 +69,20 @@ export default function EditEventPage() {
         setTickets(
           t.length > 0
             ? t.map((x) => ({
-                id: x.id, // ← keep DB id so we can preserve sold count
+                id: x.id,
                 name: x.name,
                 description: x.description || '',
+                ticket_kind: x.ticket_kind === 'free' ? 'free' : 'paid',
                 price: String(x.price || 0),
                 capacity: x.capacity ? String(x.capacity) : '',
+                unlimited: !x.capacity,
+                order_limit: x.order_limit || 10,
+                perks: Array.isArray(x.perks) ? x.perks : [],
+                is_invite_only: !!x.is_invite_only,
+                invite_password: x.invite_password || '',
                 quantity_sold: x.quantity_sold || 0,
               }))
-            : [{ name: '', description: '', price: '', capacity: '', quantity_sold: 0 }]
+            : [emptyTicket()]
         );
       } catch (err) {
         setError(err.message || 'Failed to load event');
@@ -89,15 +111,32 @@ export default function EditEventPage() {
   }
 
   function addTicket() {
-    setTickets([
-      ...tickets,
-      { name: '', description: '', price: '', capacity: '', quantity_sold: 0 },
-    ]);
+    setTickets([...tickets, emptyTicket()]);
   }
 
   function removeTicket(index) {
     if (tickets.length === 1) return;
     setTickets(tickets.filter((_, i) => i !== index));
+  }
+
+  function addPerk(ticketIndex) {
+    const updated = [...tickets];
+    updated[ticketIndex].perks = [...updated[ticketIndex].perks, ''];
+    setTickets(updated);
+  }
+
+  function updatePerk(ticketIndex, perkIndex, value) {
+    const updated = [...tickets];
+    updated[ticketIndex].perks[perkIndex] = value;
+    setTickets(updated);
+  }
+
+  function removePerk(ticketIndex, perkIndex) {
+    const updated = [...tickets];
+    updated[ticketIndex].perks = updated[ticketIndex].perks.filter(
+      (_, i) => i !== perkIndex
+    );
+    setTickets(updated);
   }
 
   async function handleSubmit(e) {
@@ -125,13 +164,15 @@ export default function EditEventPage() {
           setSaving(false);
           return;
         }
-        if (
-          t.capacity &&
-          Number(t.capacity) < Number(t.quantity_sold || 0)
-        ) {
+        if (t.capacity && Number(t.capacity) < Number(t.quantity_sold || 0)) {
           setError(
             `Capacity for "${t.name}" can't be lower than the ${t.quantity_sold} ticket(s) already sold`
           );
+          setSaving(false);
+          return;
+        }
+        if (t.is_invite_only && !t.invite_password.trim()) {
+          setError(`Invite ticket "${t.name}" needs a password`);
           setSaving(false);
           return;
         }
@@ -167,11 +208,16 @@ export default function EditEventPage() {
           image_url: finalImageUrl,
         },
         validTickets.map((t) => ({
-          id: t.id || null, // pass the id so we can match
+          id: t.id || null,
           name: t.name,
           description: t.description,
-          price: t.price,
-          capacity: t.capacity ? Number(t.capacity) : null,
+          ticket_kind: t.ticket_kind,
+          price: t.ticket_kind === 'paid' ? t.price : 0,
+          capacity: t.unlimited ? null : t.capacity,
+          order_limit: t.order_limit,
+          perks: t.perks.filter((p) => p.trim()),
+          is_invite_only: t.is_invite_only,
+          invite_password: t.is_invite_only ? t.invite_password : null,
         }))
       );
 
@@ -198,7 +244,7 @@ export default function EditEventPage() {
   return (
     <>
       <Navbar />
-      <div className="auth-page" style={{ maxWidth: 560 }}>
+      <div className="auth-page" style={{ maxWidth: 600 }}>
         <h1>Edit event</h1>
         <p>Update the details and save your changes.</p>
 
@@ -260,15 +306,53 @@ export default function EditEventPage() {
               </button>
             </div>
 
-            <p className="tickets-hint">
-              Capacity is optional. Leave it blank for unlimited tickets.
-            </p>
-
             {tickets.map((ticket, i) => (
-              <div key={i} className="ticket-input-row">
+              <div key={i} className="ticket-block">
+                <div className="ticket-block-header">
+                  <span>Ticket {i + 1}</span>
+                  {tickets.length > 1 && (
+                    <button
+                      type="button"
+                      className="remove-ticket-btn"
+                      onClick={() => removeTicket(i)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="kind-row">
+                  <div className="kind-toggle">
+                    <button
+                      type="button"
+                      className={ticket.ticket_kind === 'free' ? 'kind active' : 'kind'}
+                      onClick={() => updateTicket(i, 'ticket_kind', 'free')}
+                    >
+                      Free
+                    </button>
+                    <button
+                      type="button"
+                      className={ticket.ticket_kind === 'paid' ? 'kind active' : 'kind'}
+                      onClick={() => updateTicket(i, 'ticket_kind', 'paid')}
+                    >
+                      Paid
+                    </button>
+                  </div>
+                  <label className="invite-toggle">
+                    <input
+                      type="checkbox"
+                      checked={ticket.is_invite_only}
+                      onChange={(e) =>
+                        updateTicket(i, 'is_invite_only', e.target.checked)
+                      }
+                    />
+                    <span>Invite-only</span>
+                  </label>
+                </div>
+
                 <input
                   type="text"
-                  placeholder="Name (e.g. VIP)"
+                  placeholder="Ticket name (e.g. VIP)"
                   value={ticket.name}
                   onChange={(e) => updateTicket(i, 'name', e.target.value)}
                 />
@@ -278,34 +362,110 @@ export default function EditEventPage() {
                   value={ticket.description}
                   onChange={(e) => updateTicket(i, 'description', e.target.value)}
                 />
-                <input
-                  type="number"
-                  placeholder="Price (₦)"
-                  value={ticket.price}
-                  onChange={(e) => updateTicket(i, 'price', e.target.value)}
-                  min="0"
-                />
-                <input
-                  type="number"
-                  placeholder="Limit (optional)"
-                  value={ticket.capacity}
-                  onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
-                  min="1"
-                />
+
+                {ticket.ticket_kind === 'paid' && (
+                  <div className="price-input-wrap">
+                    <span className="price-prefix">₦</span>
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={ticket.price}
+                      onChange={(e) => updateTicket(i, 'price', e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                )}
+
+                {ticket.is_invite_only && (
+                  <div className="invite-password-block">
+                    <label>Invite password</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. vip2026"
+                      value={ticket.invite_password}
+                      onChange={(e) =>
+                        updateTicket(i, 'invite_password', e.target.value)
+                      }
+                    />
+                    <p className="invite-hint">
+                      {ticket.ticket_kind === 'free'
+                        ? 'Free, but only invited guests can claim it.'
+                        : 'Paid, but only invited guests can see and buy it.'}
+                    </p>
+                  </div>
+                )}
+
+                <div className="quantity-block">
+                  <select
+                    value={ticket.unlimited ? 'unlimited' : 'limited'}
+                    onChange={(e) =>
+                      updateTicket(i, 'unlimited', e.target.value === 'unlimited')
+                    }
+                  >
+                    <option value="limited">Limited quantity</option>
+                    <option value="unlimited">Unlimited quantity</option>
+                  </select>
+
+                  {!ticket.unlimited ? (
+                    <input
+                      type="number"
+                      placeholder="How many?"
+                      value={ticket.capacity}
+                      onChange={(e) => updateTicket(i, 'capacity', e.target.value)}
+                      min="1"
+                    />
+                  ) : (
+                    <div className="unlimited-badge">∞</div>
+                  )}
+                </div>
+
                 {ticket.quantity_sold > 0 && (
                   <div className="ticket-sold-note">
                     {ticket.quantity_sold} already sold
                   </div>
                 )}
-                {tickets.length > 1 && (
+
+                <div className="order-limit-row">
+                  <label>Order limit per person</label>
+                  <select
+                    value={ticket.order_limit}
+                    onChange={(e) =>
+                      updateTicket(i, 'order_limit', Number(e.target.value))
+                    }
+                  >
+                    {[1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 50].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="perks-section">
+                  <label>Perks (optional)</label>
+                  {ticket.perks.map((perk, j) => (
+                    <div key={j} className="perk-row">
+                      <input
+                        type="text"
+                        placeholder="e.g. Free drink"
+                        value={perk}
+                        onChange={(e) => updatePerk(i, j, e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePerk(i, j)}
+                        className="perk-remove"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                   <button
                     type="button"
-                    className="remove-ticket-btn"
-                    onClick={() => removeTicket(i)}
+                    className="add-perk-btn"
+                    onClick={() => addPerk(i)}
                   >
-                    ×
+                    + Add perk
                   </button>
-                )}
+                </div>
               </div>
             ))}
           </div>
