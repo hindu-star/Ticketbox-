@@ -10,6 +10,7 @@ import { EVENT_FORMATS } from '../../lib/eventFormats';
 import { EVENT_CATEGORIES } from '../../lib/eventCategories';
 import { NIGERIA_STATES, NIGERIA_STATE_NAMES } from '../../lib/nigeriaStates';
 import { EVENT_THEMES } from '../../lib/eventThemes';
+import RichTextEditor from '../../components/RichTextEditor';
 
 function emptyTicket() {
   return {
@@ -30,7 +31,6 @@ export default function CreatePage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
 
-  // Step 1 — Details
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
@@ -49,12 +49,10 @@ export default function CreatePage() {
   const [twitterUrl, setTwitterUrl] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
 
-  // Step 2 — Appearance
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState('');
   const [theme, setTheme] = useState('classic');
 
-  // Step 3 — Tickets
   const [tickets, setTickets] = useState([emptyTicket()]);
 
   const [loading, setLoading] = useState(false);
@@ -145,6 +143,15 @@ export default function CreatePage() {
     setStep(3);
   }
 
+  function formatTime(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':');
+    const hour = Number(h);
+    const suffix = hour >= 12 ? 'PM' : 'AM';
+    const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${display}:${m} ${suffix}`;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -191,26 +198,22 @@ export default function CreatePage() {
         imageUrl = publicUrl;
       }
 
-      // Build a human-readable location string for the old column
       const locationString = [streetAddress, cityArea, lga, state]
         .filter(Boolean)
         .join(', ');
 
-      // Build a human-readable time string for the old column
       const timeString = `${formatTime(startTime)} – ${formatTime(endTime)}`;
 
       const newEvent = await createEvent(
         {
           title,
           description,
-          // Legacy fields (still used by browse & event pages)
           location: locationString,
           event_date: startDate,
           event_time: timeString,
           image_url: imageUrl,
           emoji: '🎉',
           organizer_id: user.id,
-          // New fields
           country: 'Nigeria',
           state,
           lga,
@@ -249,15 +252,6 @@ export default function CreatePage() {
     }
   }
 
-  function formatTime(t) {
-    if (!t) return '';
-    const [h, m] = t.split(':');
-    const hour = Number(h);
-    const suffix = hour >= 12 ? 'PM' : 'AM';
-    const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${display}:${m} ${suffix}`;
-  }
-
   return (
     <>
       <Navbar />
@@ -284,7 +278,6 @@ export default function CreatePage() {
 
         {error && <div className="auth-error">{error}</div>}
 
-        {/* STEP 1 — DETAILS */}
         {step === 1 && (
           <form className="auth-form" onSubmit={goToStep2}>
             <div className="form-section">
@@ -298,11 +291,11 @@ export default function CreatePage() {
                 maxLength={75}
                 required
               />
-              <textarea
-                placeholder="Describe your event..."
-                rows="5"
+
+              <RichTextEditor
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={setDescription}
+                placeholder="Describe your event..."
               />
             </div>
 
@@ -454,7 +447,6 @@ export default function CreatePage() {
           </form>
         )}
 
-        {/* STEP 2 — APPEARANCE */}
         {step === 2 && (
           <form className="auth-form" onSubmit={goToStep3}>
             <div className="form-section">
@@ -527,7 +519,6 @@ export default function CreatePage() {
           </form>
         )}
 
-        {/* STEP 3 — TICKETS */}
         {step === 3 && (
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-section">
@@ -732,4 +723,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-}
+                  }
