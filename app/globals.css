@@ -1616,3 +1616,193 @@ a.blog-card { display: block; color: inherit; }
   color: var(--gray-500);
   font-style: italic;
 }
+/* =====================
+   EVENT THEMES
+   ===================== */
+
+/* CLASSIC (default — matches existing look) */
+.event-detail.theme-classic {
+  --ev-bg: #ffffff;
+  --ev-text: #111111;
+  --ev-muted: #64748b;
+  --ev-accent: #2563eb;
+  --ev-accent-dark: #1d4ed8;
+  --ev-card-bg: #ffffff;
+  --ev-border: #e2e8f0;
+  --ev-hero-radius: 20px;
+}
+
+/* BOLD — dark, high contrast, orange accent */
+.event-detail.theme-bold {
+  --ev-bg: #0a0a0a;
+  --ev-text: #ffffff;
+  --ev-muted: #a1a1aa;
+  --ev-accent: #f97316;
+  --ev-accent-dark: #ea580c;
+  --ev-card-bg: #18181b;
+  --ev-border: #27272a;
+  --ev-hero-radius: 20px;
+}
+.event-detail.theme-bold h1,
+.event-detail.theme-bold .event-info h1 {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -1.2px;
+}
+
+/* MINIMAL — light grey, black accents, airy */
+.event-detail.theme-minimal {
+  --ev-bg: #f8fafc;
+  --ev-text: #0f172a;
+  --ev-muted: #64748b;
+  --ev-accent: #0f172a;
+  --ev-accent-dark: #000000;
+  --ev-card-bg: #ffffff;
+  --ev-border: #e2e8f0;
+  --ev-hero-radius: 8px;
+}
+
+/* ELEGANT — soft purple, refined */
+.event-detail.theme-elegant {
+  --ev-bg: #faf5ff;
+  --ev-text: #1e1b4b;
+  --ev-muted: #7c3aed;
+  --ev-accent: #7c3aed;
+  --ev-accent-dark: #6d28d9;
+  --ev-card-bg: #ffffff;
+  --ev-border: #e9d5ff;
+  --ev-hero-radius: 16px;
+}
+.event-detail.theme-elegant h1 {
+  font-weight: 700;
+  letter-spacing: -0.6px;
+}
+
+/* =====================
+   THEME APPLICATION
+   ===================== */
+
+.event-detail[class*="theme-"] {
+  background: var(--ev-bg);
+  min-height: 100vh;
+  padding-bottom: 40px;
+  transition: background 0.3s;
+}
+
+.event-detail[class*="theme-"] .event-info h1 {
+  color: var(--ev-text);
+}
+
+.event-detail[class*="theme-"] .event-meta {
+  color: var(--ev-muted);
+}
+
+.event-detail[class*="theme-"] .event-desc {
+  color: var(--ev-text);
+}
+
+.event-detail[class*="theme-"] .event-desc h3 {
+  color: var(--ev-text);
+}
+
+.event-detail[class*="theme-"] .event-desc blockquote {
+  border-left-color: var(--ev-accent);
+  color: var(--ev-muted);
+}
+
+.event-detail[class*="theme-"] .event-desc a {
+  color: var(--ev-accent);
+}
+
+.event-detail[class*="theme-"] .ticket-heading {
+  color: var(--ev-text);
+}
+
+.event-detail[class*="theme-"] .event-hero {
+  border-radius: var(--ev-hero-radius);
+}
+
+.event-detail[class*="theme-"] .event-hero-img {
+  border-radius: var(--ev-hero-radius);
+}
+
+.event-detail[class*="theme-"] .share-btn {
+  background: var(--ev-card-bg);
+  border-color: var(--ev-border);
+  color: var(--ev-text);
+}
+.event-detail[class*="theme-"] .share-btn:hover {
+  border-color: var(--ev-accent);
+  color: var(--ev-accent);
+}
+
+/* Ticket rows use theme */
+.event-detail[class*="theme-"] .ticket-row {
+  background: var(--ev-card-bg);
+  border-color: var(--ev-border);
+}
+.event-detail[class*="theme-"] .ticket-name {
+  color: var(--ev-text);
+}
+.event-detail[class*="theme-"] .ticket-desc,
+.event-detail[class*="theme-"] .ticket-remaining,
+.event-detail[class*="theme-"] .ticket-order-limit {
+  color: var(--ev-muted);
+}
+.event-detail[class*="theme-"] .ticket-price {
+  color: var(--ev-text);
+}
+.event-detail[class*="theme-"] .ticket-buy {
+  background: var(--ev-accent);
+  color: #fff;
+}
+.event-detail[class*="theme-"] .ticket-buy:hover {
+  background: var(--ev-accent-dark);
+}
+.event-detail[class*="theme-"] .ticket-perks {
+  color: var(--ev-accent);
+}
+
+/* Invite unlocker inside themes */
+.event-detail[class*="theme-"] .invite-unlock-link {
+  background: var(--ev-card-bg);
+  border-color: var(--ev-border);
+  color: var(--ev-text);
+}
+.event-detail[class*="theme-"] .invite-unlock-link:hover {
+  border-color: var(--ev-accent);
+  color: var(--ev-accent);
+}
+.event-detail[class*="theme-"] .invite-form input {
+  background: var(--ev-card-bg);
+  border-color: var(--ev-border);
+  color: var(--ev-text);
+}
+.event-detail[class*="theme-"] .invite-form button[type="submit"] {
+  background: var(--ev-accent);
+}
+
+/* Bold theme ticket badge */
+.event-detail.theme-bold .ticket-badge.invite {
+  background: #7c2d12;
+  color: #fed7aa;
+}
+
+/* Ensure ticket row padding is comfortable on mobile */
+@media (max-width: 600px) {
+  .event-detail[class*="theme-"] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .event-detail[class*="theme-"] .event-info {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .event-detail[class*="theme-"] .event-hero-img,
+  .event-detail[class*="theme-"] .event-hero {
+    border-radius: 0;
+    margin-left: -24px;
+    margin-right: -24px;
+    width: calc(100% + 48px);
+  }
+}
