@@ -18,6 +18,8 @@ export default async function EventPage({ params }) {
 
   if (!event) notFound();
 
+  const theme = event.theme || 'classic';
+
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleDateString('en-GB', {
         weekday: 'long',
@@ -30,7 +32,7 @@ export default async function EventPage({ params }) {
   return (
     <>
       <Navbar />
-      <div className="event-detail">
+      <div className={`event-detail theme-${theme}`}>
         {event.image_url ? (
           <img src={event.image_url} alt={event.title} className="event-hero-img" />
         ) : (
@@ -61,4 +63,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-            }
+          }
