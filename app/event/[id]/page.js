@@ -1,9 +1,15 @@
 import { notFound } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import ShareButton from '../../../components/ShareButton';
 import EventTickets from '../../../components/EventTickets';
 import { getEvent, getTicketTypes } from '../../../lib/events';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default async function EventPage({ params }) {
   let event;
@@ -17,6 +23,18 @@ export default async function EventPage({ params }) {
   }
 
   if (!event) notFound();
+
+  const isDraft = event.status === 'draft';
+  let isOwner = false;
+
+  if (isDraft) {
+    // Check if the current viewer is the organizer
+    const { data: { user } } = await supabaseAdmin.auth.getUser();
+    if (!user || user.id !== event.organizer_id) {
+      notFound();
+    }
+    isOwner = true;
+  }
 
   const theme = event.theme || 'classic';
 
@@ -32,6 +50,12 @@ export default async function EventPage({ params }) {
   return (
     <>
       <Navbar />
+      {isDraft && isOwner && (
+        <div className="draft-banner">
+          📝 This event is a <strong>draft</strong> — only you can see it.
+          Publish it from <a href="/my-events">My Events</a> to make it public.
+        </div>
+      )}
       <div className={`event-detail theme-${theme}`}>
         {event.image_url ? (
           <img src={event.image_url} alt={event.title} className="event-hero-img" />
@@ -63,4 +87,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-          }
+}
