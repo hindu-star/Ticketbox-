@@ -1,7 +1,7 @@
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import EventCard from '../../components/EventCard';
-import { getEvents, addSoldOutFlags } from '../../lib/events';
+import { getPublishedEvents, addSoldOutFlags } from '../../lib/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +9,7 @@ export default async function BrowsePage() {
   let events = [];
 
   try {
-    const all = await getEvents();
+    const all = await getPublishedEvents();
     events = await addSoldOutFlags(all);
   } catch (err) {
     console.error('Failed to load events:', err);
