@@ -14,6 +14,7 @@ import {
 } from '../../../../lib/nigeriaStates';
 import { EVENT_THEMES } from '../../../../lib/eventThemes';
 import RichTextEditor from '../../../../components/RichTextEditor';
+import ThemePreview from '../../../../components/ThemePreview';
 
 const DESCRIPTION_MAX = 300;
 
@@ -112,22 +113,11 @@ export default function EditEventPage() {
         setImageUrl(event.image_url || '');
         setPreview(event.image_url || '');
 
-        // Legacy fallback: if no state, try to extract from old location string
-        if (!event.state && event.location) {
-          const parts = event.location.split(',').map((p) => p.trim());
-          if (parts.length >= 2) {
-            setStreetAddress(parts[0] || '');
-          } else {
-            setStreetAddress(event.location);
-          }
-        } else {
-          // Reconstruct street address from parts
-          const parts = (event.location || '')
-            .split(',')
-            .map((p) => p.trim())
-            .filter(Boolean);
-          setStreetAddress(parts[0] || '');
-        }
+        const parts = (event.location || '')
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean);
+        setStreetAddress(parts[0] || '');
 
         const t = await getTicketTypes(eventId);
         setTickets(
@@ -618,6 +608,9 @@ export default function EditEventPage() {
 
             <div className="form-section">
               <h3 className="form-section-title">Choose a theme</h3>
+              <p className="form-section-hint">
+                Pick how your event page will look to buyers.
+              </p>
 
               <div className="theme-grid">
                 {EVENT_THEMES.map((t) => (
@@ -627,24 +620,23 @@ export default function EditEventPage() {
                     className={`theme-card ${theme === t.id ? 'active' : ''}`}
                     onClick={() => setTheme(t.id)}
                   >
-                    <div
-                      className="theme-preview"
-                      style={{
-                        background: t.preview.bg,
-                        color: t.preview.text,
-                      }}
-                    >
-                      <div
-                        className="theme-preview-bar"
-                        style={{ background: t.preview.accent }}
-                      />
-                      <div className="theme-preview-line" />
-                      <div className="theme-preview-line short" />
+                    <ThemePreview theme={t.id} />
+
+                    {theme === t.id && (
+                      <div className="theme-check">✓</div>
+                    )}
+
+                    <div className="theme-card-footer">
+                      <div className="theme-name">{t.name}</div>
+                      <div className="theme-desc">{t.description}</div>
                     </div>
-                    <div className="theme-name">{t.name}</div>
-                    <div className="theme-desc">{t.description}</div>
                   </button>
                 ))}
+              </div>
+
+              <div className="theme-live-preview">
+                <div className="theme-live-label">Live preview</div>
+                <ThemePreview theme={theme} large />
               </div>
             </div>
 
@@ -871,4 +863,4 @@ export default function EditEventPage() {
       <Footer />
     </>
   );
-  }
+                }
