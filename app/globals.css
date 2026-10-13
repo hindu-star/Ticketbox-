@@ -2052,3 +2052,50 @@ a.blog-card { display: block; color: inherit; }
   background: var(--blue-dark) !important;
   color: #fff !important;
 }
+/* BROWSE SEARCH */
+.browse-search {
+  position: relative;
+  margin-bottom: 24px;
+  max-width: 480px;
+}
+.browse-search input {
+  width: 100%;
+  padding: 14px 44px 14px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+  background: #fff;
+  box-sizing: border-box;
+}
+.browse-search input:focus {
+  border-color: var(--blue);
+}
+.browse-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.browse-search-clear:hover {
+  background: var(--gray-200);
+}
+.browse-result-count {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-bottom: 16px;
+}
