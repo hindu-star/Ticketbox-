@@ -15,7 +15,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    // Fetch the ticket type
     const { data: ticket, error: ticketError } = await supabase
       .from('ticket_types')
       .select('*')
@@ -26,7 +25,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
-    // Check capacity
     if (ticket.capacity) {
       const sold = ticket.quantity_sold || 0;
       const remaining = ticket.capacity - sold;
@@ -52,7 +50,7 @@ export async function POST(request) {
     const total = subtotal + serviceFee;
 
     const reference = generateReference();
-    const baseUrl = request.headers.get('origin') || 'https://ticketbox-lgsn.vercel.app';
+    const baseUrl = request.headers.get('origin') || 'https://ticketbox.com.ng';
 
     const paystackData = await initializeTransaction({
       email: buyerEmail,
