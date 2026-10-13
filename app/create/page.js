@@ -169,8 +169,7 @@ export default function CreatePage() {
     return `${display}:${m} ${suffix}`;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(mode) {
     setLoading(true);
     setError('');
 
@@ -247,6 +246,7 @@ export default function CreatePage() {
           twitter_url: twitterUrl || null,
           facebook_url: facebookUrl || null,
           theme,
+          status: mode === 'draft' ? 'draft' : 'published',
         },
         validTickets.map((t) => ({
           name: t.name,
@@ -261,7 +261,11 @@ export default function CreatePage() {
         }))
       );
 
-      router.push(`/event/${newEvent.id}`);
+      if (mode === 'draft') {
+        router.push('/my-events');
+      } else {
+        router.push(`/event/${newEvent.id}`);
+      }
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to create event');
@@ -548,7 +552,7 @@ export default function CreatePage() {
         )}
 
         {step === 3 && (
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
             <div className="form-section">
               <div className="tickets-header">
                 <h3>Ticket types</h3>
@@ -733,18 +737,32 @@ export default function CreatePage() {
               ))}
             </div>
 
-            <div className="wizard-actions">
+            <div className="publish-actions">
               <button
                 type="button"
-                className="wizard-back"
-                onClick={() => setStep(2)}
+                className="publish-draft"
+                onClick={() => handleSubmit('draft')}
+                disabled={loading}
               >
-                ← Back
+                {loading ? 'Saving...' : 'Save as draft'}
               </button>
-              <button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create event'}
+              <button
+                type="button"
+                className="publish-live"
+                onClick={() => handleSubmit('published')}
+                disabled={loading}
+              >
+                {loading ? 'Publishing...' : 'Publish event'}
               </button>
             </div>
+
+            <button
+              type="button"
+              className="wizard-back-full"
+              onClick={() => setStep(2)}
+            >
+              ← Back to appearance
+            </button>
           </form>
         )}
       </div>
