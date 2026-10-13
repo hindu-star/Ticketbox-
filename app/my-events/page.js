@@ -11,10 +11,16 @@ import {
   deleteEvent,
   publishEvent,
   unpublishEvent,
+  getEventStats,
 } from '../../lib/events';
+
+function formatNaira(n) {
+  return `₦${Number(n || 0).toLocaleString()}`;
+}
 
 export default function MyEventsPage() {
   const [events, setEvents] = useState([]);
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
@@ -33,6 +39,19 @@ export default function MyEventsPage() {
       try {
         const myEvents = await getMyEvents(user.id);
         setEvents(myEvents);
+
+        // Load stats for each event in parallel
+        const statsMap = {};
+        await Promise.all(
+          myEvents.map(async (e) => {
+            try {
+              statsMap[e.id] = await getEventStats(e.id);
+            } catch (err) {
+              statsMap[e.id] = { ticketsSold: 0, revenue: 0 };
+            }
+          })
+        );
+        setStats(statsMap);
       } catch (err) {
         setError(err.message || 'Failed to load events');
       } finally {
@@ -173,6 +192,8 @@ export default function MyEventsPage() {
             {visibleEvents.map((e) => {
               const ended = isEnded(e);
               const isDraft = e.status === 'draft';
+              const s = stats[e.id] || { ticketsSold: 0, revenue: 0 };
+
               return (
                 <div key={e.id} className="dashboard-row">
                   <div className="dashboard-row-img">
@@ -201,6 +222,20 @@ export default function MyEventsPage() {
                             year: 'numeric',
                           })
                         : 'TBA'}
+                    </div>
+                    <div className="dashboard-row-stats">
+                      <span className="dash-stat">
+                        🎟️ <strong>{s.ticketsSold}</strong> sold
+                      </span>
+                      <span className="dash-stat">
+                        💰 <strong>{formatNaira(s.revenue)}</strong> earned
+                      </span>
+                      <Link
+                        href={`/event/${e.id}/analytics`}
+                        className="dash-stat-link"
+                      >
+                        View analytics →
+                      </Link>
                     </div>
                   </div>
                   <div className="dashboard-row-actions">
@@ -247,4 +282,4 @@ export default function MyEventsPage() {
       <Footer />
     </>
   );
-    }
+                }
