@@ -2,7 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 
-export default function RichTextEditor({ value, onChange, placeholder }) {
+export default function RichTextEditor({
+  value,
+  onChange,
+  placeholder,
+  maxLength,
+}) {
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -17,10 +22,29 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
     handleInput();
   }
 
+  function countText(html) {
+    return (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
+  }
+
   function handleInput() {
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+    if (!editorRef.current) return;
+
+    let html = editorRef.current.innerHTML;
+
+    if (maxLength && countText(html) > maxLength) {
+      // Revert to previous value if over limit
+      editorRef.current.innerHTML = value || '';
+      // Place cursor at end
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return;
     }
+
+    onChange(html);
   }
 
   function addLink() {
@@ -76,4 +100,4 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
       />
     </div>
   );
-}
+  }
