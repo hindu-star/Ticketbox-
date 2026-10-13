@@ -27,6 +27,8 @@ function emptyTicket() {
   };
 }
 
+const DESCRIPTION_MAX = 300;
+
 export default function CreatePage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -58,7 +60,12 @@ export default function CreatePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const lgasForState = state && NIGERIA_STATES[state] ? NIGERIA_STATES[state] : [];
+  const lgasForState =
+    state && NIGERIA_STATES[state] ? NIGERIA_STATES[state] : [];
+
+  const descTextLength = (description || '')
+    .replace(/<[^>]*>/g, '')
+    .trim().length;
 
   function handleFileChange(e) {
     const selected = e.target.files?.[0];
@@ -109,6 +116,15 @@ export default function CreatePage() {
 
   function validateStep1() {
     if (!title.trim()) return 'Event name is required';
+
+    const descText = (description || '').replace(/<[^>]*>/g, '').trim();
+    if (descText.length < 20) {
+      return 'Please describe your event (at least 20 characters)';
+    }
+    if (descText.length > DESCRIPTION_MAX) {
+      return `Description must be ${DESCRIPTION_MAX} characters or less`;
+    }
+
     if (!streetAddress.trim()) return 'Street address is required';
     if (!state) return 'Please select a state';
     if (!lga) return 'Please select an LGA';
@@ -292,11 +308,20 @@ export default function CreatePage() {
                 required
               />
 
-              <RichTextEditor
-                value={description}
-                onChange={setDescription}
-                placeholder="Describe your event..."
-              />
+              <div className="rte-wrap-with-counter">
+                <RichTextEditor
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Describe your event..."
+                  maxLength={DESCRIPTION_MAX}
+                />
+                <div className="rte-counter">
+                  {descTextLength} / {DESCRIPTION_MAX} characters
+                </div>
+              </div>
+              <p className="field-hint">
+                Required — tell attendees what to expect (20–{DESCRIPTION_MAX} characters).
+              </p>
             </div>
 
             <div className="form-section">
@@ -723,4 +748,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-                  }
+                                           }
