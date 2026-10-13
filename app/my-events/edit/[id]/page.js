@@ -44,6 +44,7 @@ export default function EditEventPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [currentStatus, setCurrentStatus] = useState('published');
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -112,6 +113,7 @@ export default function EditEventPage() {
         setTheme(event.theme || 'classic');
         setImageUrl(event.image_url || '');
         setPreview(event.image_url || '');
+        setCurrentStatus(event.status || 'published');
 
         const parts = (event.location || '')
           .split(',')
@@ -248,8 +250,7 @@ export default function EditEventPage() {
     return `${display}:${m} ${suffix}`;
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(mode) {
     setSaving(true);
     setError('');
 
@@ -340,6 +341,7 @@ export default function EditEventPage() {
           twitter_url: twitterUrl || null,
           facebook_url: facebookUrl || null,
           theme,
+          status: mode === 'draft' ? 'draft' : 'published',
         },
         validTickets.map((t) => ({
           id: t.id || null,
@@ -654,7 +656,14 @@ export default function EditEventPage() {
         )}
 
         {step === 3 && (
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
+            {currentStatus === 'draft' && (
+              <div className="draft-info-banner">
+                This event is currently a <strong>draft</strong>.
+                Tap <strong>Save & publish</strong> to make it live.
+              </div>
+            )}
+
             <div className="form-section">
               <div className="tickets-header">
                 <h3>Ticket types</h3>
@@ -845,22 +854,36 @@ export default function EditEventPage() {
               ))}
             </div>
 
-            <div className="wizard-actions">
+            <div className="publish-actions">
               <button
                 type="button"
-                className="wizard-back"
-                onClick={() => setStep(2)}
+                className="publish-draft"
+                onClick={() => handleSubmit('draft')}
+                disabled={saving}
               >
-                ← Back
+                {saving ? 'Saving...' : 'Save as draft'}
               </button>
-              <button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : 'Save changes'}
+              <button
+                type="button"
+                className="publish-live"
+                onClick={() => handleSubmit('published')}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save & publish'}
               </button>
             </div>
+
+            <button
+              type="button"
+              className="wizard-back-full"
+              onClick={() => setStep(2)}
+            >
+              ← Back to appearance
+            </button>
           </form>
         )}
       </div>
       <Footer />
     </>
   );
-                     }
+      }
