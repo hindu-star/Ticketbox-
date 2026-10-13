@@ -2,7 +2,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import EventCard from '../components/EventCard';
 import Link from 'next/link';
-import { getEvents, addSoldOutFlags } from '../lib/events';
+import { getPublishedEvents, addSoldOutFlags } from '../lib/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export default async function HomePage() {
   let events = [];
 
   try {
-    const all = await getEvents();
+    const all = await getPublishedEvents();
     const withFlags = await addSoldOutFlags(all);
     events = withFlags.slice(0, 10);
   } catch (err) {
