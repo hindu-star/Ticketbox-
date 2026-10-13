@@ -2153,3 +2153,18 @@ a.blog-card { display: block; color: inherit; }
 .wizard-back-full:hover {
   color: var(--blue);
 }
+/* DRAFT INFO BANNER (edit page) */
+.draft-info-banner {
+  padding: 12px 16px;
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+.draft-info-banner strong {
+  color: #92400e;
+  font-weight: 700;
+}
