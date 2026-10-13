@@ -2168,3 +2168,26 @@ a.blog-card { display: block; color: inherit; }
   color: #92400e;
   font-weight: 700;
 }
+/* DASHBOARD STATS */
+.dashboard-row-stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--gray-700);
+}
+.dash-stat strong {
+  color: var(--black);
+  font-weight: 700;
+}
+.dash-stat-link {
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 13px;
+}
+.dash-stat-link:hover {
+  color: var(--blue-dark);
+  text-decoration: underline;
+}
