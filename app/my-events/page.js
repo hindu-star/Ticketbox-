@@ -6,13 +6,19 @@ import { useRouter } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { supabase } from '../../lib/supabase';
-import { getMyEvents, deleteEvent } from '../../lib/events';
+import {
+  getMyEvents,
+  deleteEvent,
+  publishEvent,
+  unpublishEvent,
+} from '../../lib/events';
 
 export default function MyEventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState('all');
   const router = useRouter();
 
   useEffect(() => {
@@ -36,22 +42,87 @@ export default function MyEventsPage() {
     load();
   }, [router]);
 
+  const now = new Date();
+
+  function isEnded(e) {
+    const dateStr = e.end_date || e.event_date;
+    if (!dateStr) return false;
+    const endDateTime = e.end_time
+      ? new Date(`${dateStr}T${e.end_time}`)
+      : new Date(`${dateStr}T23:59`);
+    return endDateTime < now;
+  }
+
+  const allEvents = events;
+  const publishedEvents = events.filter((e) => e.status !== 'draft' && !isEnded(e));
+  const draftEvents = events.filter((e) => e.status === 'draft');
+  const endedEvents = events.filter((e) => e.status !== 'draft' && isEnded(e));
+
+  const visibleEvents =
+    tab === 'published'
+      ? publishedEvents
+      : tab === 'drafts'
+      ? draftEvents
+      : tab === 'ended'
+      ? endedEvents
+      : allEvents;
+
   async function handleDelete(id, title) {
     const confirmed = window.confirm(
       `Delete "${title}"? This cannot be undone.`
     );
     if (!confirmed) return;
 
-    setDeleting(id);
+    setBusyId(id);
     try {
       await deleteEvent(id);
       setEvents(events.filter((e) => e.id !== id));
     } catch (err) {
       alert('Failed to delete: ' + err.message);
     } finally {
-      setDeleting(null);
+      setBusyId(null);
     }
   }
+
+  async function handlePublish(id) {
+    setBusyId(id);
+    try {
+      await publishEvent(id);
+      setEvents(
+        events.map((e) => (e.id === id ? { ...e, status: 'published' } : e))
+      );
+    } catch (err) {
+      alert('Failed to publish: ' + err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleUnpublish(id) {
+    const confirmed = window.confirm(
+      'Unpublish this event? It will be hidden from the public and moved to Drafts.'
+    );
+    if (!confirmed) return;
+
+    setBusyId(id);
+    try {
+      await unpublishEvent(id);
+      setEvents(
+        events.map((e) => (e.id === id ? { ...e, status: 'draft' } : e))
+      );
+    } catch (err) {
+      alert('Failed to unpublish: ' + err.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const tabs = [
+    { id: 'all', label: 'All', count: allEvents.length },
+    { id: 'published', label: 'Published', count: publishedEvents.length },
+    { id: 'drafts', label: 'Drafts', count: draftEvents.length },
+    { id: 'ended', label: 'Ended', count: endedEvents.length },
+  ];
 
   return (
     <>
@@ -60,63 +131,120 @@ export default function MyEventsPage() {
         <div className="dashboard-header">
           <div>
             <h1>My Events</h1>
-            <p>Manage the events you've created.</p>
+            <p>Manage the events you&apos;ve created.</p>
           </div>
           <Link href="/create" className="dashboard-create-btn">
             + Create event
           </Link>
         </div>
 
+        <div className="dash-tabs">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`dash-tab ${tab === t.id ? 'active' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+              {t.count > 0 && <span className="dash-tab-count">{t.count}</span>}
+            </button>
+          ))}
+        </div>
+
         {error && <div className="auth-error">{error}</div>}
 
         {loading ? (
           <p style={{ color: '#64748b' }}>Loading your events...</p>
-        ) : events.length === 0 ? (
+        ) : visibleEvents.length === 0 ? (
           <div className="empty-state">
-            <p>You haven't created any events yet.</p>
-            <Link href="/create">Create your first event</Link>
+            {tab === 'all' && (
+              <>
+                <p>You haven&apos;t created any events yet.</p>
+                <Link href="/create">Create your first event</Link>
+              </>
+            )}
+            {tab === 'published' && <p>No published events.</p>}
+            {tab === 'drafts' && <p>No drafts saved.</p>}
+            {tab === 'ended' && <p>No ended events yet.</p>}
           </div>
         ) : (
           <div className="dashboard-list">
-            {events.map((e) => (
-              <div key={e.id} className="dashboard-row">
-                <div className="dashboard-row-img">
-                  {e.image_url ? (
-                    <img src={e.image_url} alt={e.title} />
-                  ) : (
-                    <span>{e.emoji || '🎉'}</span>
-                  )}
-                </div>
-                <div className="dashboard-row-info">
-                  <div className="dashboard-row-title">{e.title}</div>
-                  <div className="dashboard-row-meta">
-                    📍 {e.location} · 📅{' '}
-                    {e.event_date
-                      ? new Date(e.event_date).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })
-                      : 'TBA'}
+            {visibleEvents.map((e) => {
+              const ended = isEnded(e);
+              const isDraft = e.status === 'draft';
+              return (
+                <div key={e.id} className="dashboard-row">
+                  <div className="dashboard-row-img">
+                    {e.image_url ? (
+                      <img src={e.image_url} alt={e.title} />
+                    ) : (
+                      <span>{e.emoji || '🎉'}</span>
+                    )}
+                  </div>
+                  <div className="dashboard-row-info">
+                    <div className="dashboard-row-title">
+                      {e.title}
+                      {isDraft && (
+                        <span className="draft-badge">Draft</span>
+                      )}
+                      {!isDraft && ended && (
+                        <span className="ended-badge">Ended</span>
+                      )}
+                    </div>
+                    <div className="dashboard-row-meta">
+                      📍 {e.location} · 📅{' '}
+                      {e.event_date
+                        ? new Date(e.event_date).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : 'TBA'}
+                    </div>
+                  </div>
+                  <div className="dashboard-row-actions">
+                    <Link href={`/event/${e.id}`} className="dash-btn">
+                      View
+                    </Link>
+                    <Link
+                      href={`/my-events/edit/${e.id}`}
+                      className="dash-btn"
+                    >
+                      Edit
+                    </Link>
+                    {isDraft ? (
+                      <button
+                        onClick={() => handlePublish(e.id)}
+                        disabled={busyId === e.id}
+                        className="dash-btn dash-btn-primary"
+                      >
+                        {busyId === e.id ? '...' : 'Publish'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnpublish(e.id)}
+                        disabled={busyId === e.id}
+                        className="dash-btn"
+                      >
+                        {busyId === e.id ? '...' : 'Unpublish'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(e.id, e.title)}
+                      disabled={busyId === e.id}
+                      className="dash-btn dash-btn-danger"
+                    >
+                      {busyId === e.id ? '...' : 'Delete'}
+                    </button>
                   </div>
                 </div>
-                <div className="dashboard-row-actions">
-                  <Link href={`/event/${e.id}`} className="dash-btn">View</Link>
-                  <Link href={`/my-events/edit/${e.id}`} className="dash-btn">Edit</Link>
-                  <button
-                    onClick={() => handleDelete(e.id, e.title)}
-                    disabled={deleting === e.id}
-                    className="dash-btn dash-btn-danger"
-                  >
-                    {deleting === e.id ? '...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
       <Footer />
     </>
   );
-}
+    }
