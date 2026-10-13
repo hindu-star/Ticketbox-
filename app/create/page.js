@@ -11,6 +11,7 @@ import { EVENT_CATEGORIES } from '../../lib/eventCategories';
 import { NIGERIA_STATES, NIGERIA_STATE_NAMES } from '../../lib/nigeriaStates';
 import { EVENT_THEMES } from '../../lib/eventThemes';
 import RichTextEditor from '../../components/RichTextEditor';
+import ThemePreview from '../../components/ThemePreview';
 
 function emptyTicket() {
   return {
@@ -501,6 +502,9 @@ export default function CreatePage() {
 
             <div className="form-section">
               <h3 className="form-section-title">Choose a theme</h3>
+              <p className="form-section-hint">
+                Pick how your event page will look to buyers.
+              </p>
 
               <div className="theme-grid">
                 {EVENT_THEMES.map((t) => (
@@ -510,24 +514,23 @@ export default function CreatePage() {
                     className={`theme-card ${theme === t.id ? 'active' : ''}`}
                     onClick={() => setTheme(t.id)}
                   >
-                    <div
-                      className="theme-preview"
-                      style={{
-                        background: t.preview.bg,
-                        color: t.preview.text,
-                      }}
-                    >
-                      <div
-                        className="theme-preview-bar"
-                        style={{ background: t.preview.accent }}
-                      />
-                      <div className="theme-preview-line" />
-                      <div className="theme-preview-line short" />
+                    <ThemePreview theme={t.id} />
+
+                    {theme === t.id && (
+                      <div className="theme-check">✓</div>
+                    )}
+
+                    <div className="theme-card-footer">
+                      <div className="theme-name">{t.name}</div>
+                      <div className="theme-desc">{t.description}</div>
                     </div>
-                    <div className="theme-name">{t.name}</div>
-                    <div className="theme-desc">{t.description}</div>
                   </button>
                 ))}
+              </div>
+
+              <div className="theme-live-preview">
+                <div className="theme-live-label">Live preview</div>
+                <ThemePreview theme={theme} large />
               </div>
             </div>
 
@@ -748,4 +751,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-                                           }
+    }
