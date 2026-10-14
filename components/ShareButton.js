@@ -31,7 +31,6 @@ export default function ShareButton({ eventId, title }) {
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const url = `${baseUrl}/event/${eventId}`;
-  const text = `Check out "${title}" on TicketBox 🎟️`;
 
   async function copyLink() {
     try {
@@ -53,20 +52,33 @@ export default function ShareButton({ eventId, title }) {
   async function nativeShare() {
     if (navigator.share) {
       try {
-        await navigator.share({ title, text, url });
+        await navigator.share({ title, text: title, url });
         setOpen(false);
       } catch (err) {
-        // User cancelled
+        // user cancelled
       }
     } else {
       copyLink();
     }
   }
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+  // WhatsApp — short text + URL on its own line
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
+    `🎟️ ${title}\n\n${url}`
+  )}`;
+
+  // Telegram — URL only, Telegram auto-generates rich preview
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}`;
+
+  // Twitter/X — short text + URL
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+    `Check out "${title}" on TicketBox 🎟️`
+  )}&url=${encodeURIComponent(url)}`;
+
+  // Facebook — URL only, Facebook auto-generates rich preview
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+    url
+  )}`;
 
   return (
     <div className="share-wrap">
@@ -96,6 +108,14 @@ export default function ShareButton({ eventId, title }) {
             <span className="share-icon">{icons.whatsapp}</span> WhatsApp
           </a>
           <a
+            href={telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="share-item"
+          >
+            <span className="share-icon">{icons.telegram}</span> Telegram
+          </a>
+          <a
             href={twitterUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -111,16 +131,8 @@ export default function ShareButton({ eventId, title }) {
           >
             <span className="share-icon">{icons.facebook}</span> Facebook
           </a>
-          <a
-            href={telegramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="share-item"
-          >
-            <span className="share-icon">{icons.telegram}</span> Telegram
-          </a>
         </div>
       )}
     </div>
   );
-    }
+        }
