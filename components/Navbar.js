@@ -23,11 +23,13 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     setMenuOpen(false);
+    setAccountOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -107,17 +109,44 @@ export default function Navbar() {
       {/* Mobile menu drawer */}
       {menuOpen && (
         <div className="navbar-drawer">
-          <Link href="/browse">Browse</Link>
-          {!loading && user && <Link href="/my-events">My Events</Link>}
-          <Link href="/create">+ Create event</Link>
-          {!loading && !user && <Link href="/login">Login</Link>}
-          {!loading && user && (
-            <button onClick={handleLogout} className="drawer-logout">
-              Log out
-            </button>
+          {loading ? null : user ? (
+            <>
+              <Link href="/browse">Browse</Link>
+              <Link href="/my-events">Events</Link>
+
+              <button
+                type="button"
+                className={`drawer-account-toggle ${accountOpen ? 'open' : ''}`}
+                onClick={() => setAccountOpen(!accountOpen)}
+              >
+                <span>Account</span>
+                <span className={`drawer-chevron ${accountOpen ? 'open' : ''}`}>›</span>
+              </button>
+
+              {accountOpen && (
+                <div className="drawer-account-items">
+                  <Link href="/account/personal">Personal profile</Link>
+                  <Link href="/account/organizer">Organizer profile</Link>
+                  <Link href="/account/password">Set password</Link>
+                  <Link href="/account/payouts">Payout account</Link>
+                </div>
+              )}
+
+              <Link href="/create">+ Create event</Link>
+              <Link href="/contact">Help</Link>
+              <button onClick={handleLogout} className="drawer-logout">
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/browse">Browse</Link>
+              <Link href="/create">Create event</Link>
+              <Link href="/login">Login</Link>
+            </>
           )}
         </div>
       )}
     </nav>
   );
-                }
+        }
