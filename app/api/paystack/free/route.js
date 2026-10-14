@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendTicketEmail } from '../../../../lib/email';
+import { createTicketsForOrder } from '../../../../lib/events';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export async function POST(request) {
@@ -73,6 +74,22 @@ export async function POST(request) {
       throw orderError;
     }
 
+    // Create individual tickets
+    let ticketIds = [];
+    try {
+      await createTicketsForOrder(order.id, eventId, quantity);
+      const { data: created } = await supabase
+        .from('tickets')
+        .select('id')
+        .eq('order_id', order.id)
+        .order('ticket_number', { ascending: true });
+      ticketIds = (created || []).map((t) => t.id);
+      console.log('Created', ticketIds.length, 'tickets for order', order.id);
+    } catch (ticketErr) {
+      console.error('Ticket creation error:', ticketErr);
+      // continue anyway — order is created
+    }
+
     const newSold = (ticket.quantity_sold || 0) + quantity;
     await supabase
       .from('ticket_types')
@@ -98,6 +115,7 @@ export async function POST(request) {
           orderId: reference,
           quantity,
           total: 0,
+          ticketIds,
         });
         console.log('Free ticket email result:', JSON.stringify(emailResult));
       }
