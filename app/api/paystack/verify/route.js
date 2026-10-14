@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyTransaction } from '../../../../lib/paystack';
 import { sendTicketEmail } from '../../../../lib/email';
+import { createTicketsForOrder } from '../../../../lib/events';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,15 +21,16 @@ export async function GET(request) {
     console.log('Verify called with reference:', reference);
 
     let order = null;
+    let shouldSendEmail = false;
 
     if (reference.startsWith('TB-FREE-')) {
+      // Free flow handled elsewhere — just look up
       const { data } = await supabase
         .from('orders')
         .select('*')
         .eq('paystack_reference', reference)
         .single();
       order = data;
-      console.log('Free ticket order found:', !!order);
     } else {
       const paystackData = await verifyTransaction(reference);
 
@@ -45,6 +47,8 @@ export async function GET(request) {
         .eq('paystack_reference', reference)
         .single();
 
+      const isNewlyPaid = existingOrder && existingOrder.status !== 'paid';
+
       const { data: updatedOrder } = await supabase
         .from('orders')
         .update({ status: 'paid' })
@@ -53,8 +57,10 @@ export async function GET(request) {
         .single();
 
       order = updatedOrder;
+      shouldSendEmail = !!isNewlyPaid;
 
-      if (existingOrder && existingOrder.status !== 'paid') {
+      if (isNewlyPaid && existingOrder) {
+        // Increment sold count
         const { data: ticket } = await supabase
           .from('ticket_types')
           .select('*')
@@ -68,12 +74,28 @@ export async function GET(request) {
             .update({ quantity_sold: newSold })
             .eq('id', ticket.id);
         }
+
+        // Create individual tickets
+        try {
+          await createTicketsForOrder(
+            existingOrder.id,
+            existingOrder.event_id,
+            existingOrder.quantity
+          );
+          console.log(
+            'Created',
+            existingOrder.quantity,
+            'tickets for order',
+            existingOrder.id
+          );
+        } catch (ticketErr) {
+          console.error('Ticket creation error:', ticketErr);
+        }
       }
     }
 
-    console.log('About to send email. Order exists:', !!order);
-
-    if (order) {
+    // Send email if newly paid
+    if (shouldSendEmail && order) {
       try {
         const { data: event } = await supabase
           .from('events')
@@ -87,11 +109,17 @@ export async function GET(request) {
           .eq('id', order.ticket_type_id)
           .single();
 
-        console.log('Event found:', !!event, '| Ticket found:', !!ticket);
-        console.log('Buyer email:', order.buyer_email);
+        // Get the individual tickets we just created
+        const { data: ticketRows } = await supabase
+          .from('tickets')
+          .select('id')
+          .eq('order_id', order.id)
+          .order('ticket_number', { ascending: true });
+
+        const ticketIds = (ticketRows || []).map((t) => t.id);
 
         if (event && ticket) {
-          console.log('Calling sendTicketEmail now...');
+          console.log('Calling sendTicketEmail for:', order.buyer_email);
           const emailResult = await sendTicketEmail({
             to: order.buyer_email,
             name: order.buyer_email.split('@')[0],
@@ -100,12 +128,12 @@ export async function GET(request) {
             orderId: order.paystack_reference,
             quantity: order.quantity,
             total: order.total,
+            ticketIds,
           });
-          console.log('Email result:', JSON.stringify(emailResult));
+          console.log('Ticket email result:', JSON.stringify(emailResult));
         }
       } catch (emailErr) {
         console.error('TICKET EMAIL FAILED:', emailErr.message || emailErr);
-        console.error('Full error:', JSON.stringify(emailErr, null, 2));
       }
     }
 
