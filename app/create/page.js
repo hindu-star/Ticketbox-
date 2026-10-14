@@ -58,7 +58,7 @@ export default function CreatePage() {
 
   const [tickets, setTickets] = useState([emptyTicket()]);
 
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(null);
   const [error, setError] = useState('');
 
   const lgasForState =
@@ -170,28 +170,28 @@ export default function CreatePage() {
   }
 
   async function handleSubmit(mode) {
-    setLoading(true);
+    setSubmitting(mode);
     setError('');
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setError('You must be logged in to create an event.');
-        setLoading(false);
+        setSubmitting(null);
         return;
       }
 
       const validTickets = tickets.filter((t) => t.name.trim());
       if (validTickets.length === 0) {
         setError('Add at least one ticket type');
-        setLoading(false);
+        setSubmitting(null);
         return;
       }
 
       for (const t of validTickets) {
         if (t.is_invite_only && !t.invite_password.trim()) {
           setError(`Invite ticket "${t.name}" needs a password`);
-          setLoading(false);
+          setSubmitting(null);
           return;
         }
       }
@@ -269,7 +269,7 @@ export default function CreatePage() {
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to create event');
-      setLoading(false);
+      setSubmitting(null);
     }
   }
 
@@ -520,9 +520,7 @@ export default function CreatePage() {
                   >
                     <ThemePreview theme={t.id} />
 
-                    {theme === t.id && (
-                      <div className="theme-check">✓</div>
-                    )}
+                    {theme === t.id && <div className="theme-check">✓</div>}
 
                     <div className="theme-card-footer">
                       <div className="theme-name">{t.name}</div>
@@ -742,17 +740,17 @@ export default function CreatePage() {
                 type="button"
                 className="publish-draft"
                 onClick={() => handleSubmit('draft')}
-                disabled={loading}
+                disabled={submitting !== null}
               >
-                {loading ? 'Saving...' : 'Save as draft'}
+                {submitting === 'draft' ? 'Saving...' : 'Save as draft'}
               </button>
               <button
                 type="button"
                 className="publish-live"
                 onClick={() => handleSubmit('published')}
-                disabled={loading}
+                disabled={submitting !== null}
               >
-                {loading ? 'Publishing...' : 'Publish event'}
+                {submitting === 'published' ? 'Publishing...' : 'Publish event'}
               </button>
             </div>
 
@@ -769,4 +767,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-    }
+          }
