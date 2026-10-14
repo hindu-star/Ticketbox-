@@ -6,6 +6,8 @@ import ShareButton from '../../../components/ShareButton';
 import EventTickets from '../../../components/EventTickets';
 import { getEvent, getTicketTypes } from '../../../lib/events';
 
+export const dynamic = 'force-dynamic';
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
