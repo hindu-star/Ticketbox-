@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import EventCard from '../../components/EventCard';
-import { getPublishedEvents, addSoldOutFlags } from '../../lib/events';
+import {
+  getUpcomingPublishedEvents,
+  addSoldOutFlags,
+} from '../../lib/events';
 
 export default function BrowsePage() {
   const [events, setEvents] = useState([]);
@@ -14,7 +17,7 @@ export default function BrowsePage() {
   useEffect(() => {
     async function load() {
       try {
-        const all = await getPublishedEvents();
+        const all = await getUpcomingPublishedEvents();
         const withFlags = await addSoldOutFlags(all);
         setEvents(withFlags);
       } catch (err) {
@@ -98,7 +101,9 @@ export default function BrowsePage() {
                     soldOut: e.soldOut,
                     date: e.event_date
                       ? new Date(e.event_date).toLocaleDateString('en-GB', {
-                          day: 'numeric', month: 'short', year: 'numeric',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
                         })
                       : 'Date TBA',
                     title: e.title,
@@ -114,4 +119,4 @@ export default function BrowsePage() {
       <Footer />
     </>
   );
-              }
+}
