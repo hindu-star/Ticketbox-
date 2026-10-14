@@ -49,53 +49,52 @@ export async function POST(request) {
     const serviceFee = Math.round((subtotal * feePercent) / 100);
     const total = subtotal + serviceFee;
 
-    const reference = generateReference();
     // Look up the event's organizer and their subaccount
-const { data: event, error: eventError } = await supabase
-  .from('events')
-  .select('organizer_id')
-  .eq('id', eventId)
-  .single();
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('organizer_id')
+      .eq('id', eventId)
+      .single();
 
-if (eventError || !event) {
-  return NextResponse.json({ error: 'Event not found' }, { status: 404 });
-}
+    if (eventError || !event) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
 
-const { data: organizer } = await supabase
-  .from('profiles')
-  .select('paystack_subaccount_code')
-  .eq('id', event.organizer_id)
-  .single();
+    const { data: organizer } = await supabase
+      .from('profiles')
+      .select('paystack_subaccount_code')
+      .eq('id', event.organizer_id)
+      .single();
 
-if (!organizer || !organizer.paystack_subaccount_code) {
-  return NextResponse.json(
-    {
-      error:
-        'This organizer has not set up payouts yet. Please contact them.',
-    },
-    { status: 400 }
-  );
-}
+    if (!organizer || !organizer.paystack_subaccount_code) {
+      return NextResponse.json(
+        {
+          error:
+            'This organizer has not set up payouts yet. Please contact them.',
+        },
+        { status: 400 }
+      );
+    }
 
-const reference = generateReference();
-const baseUrl = request.headers.get('origin') || 'https://ticketbox.com.ng';
+    const reference = generateReference();
+    const baseUrl = request.headers.get('origin') || 'https://ticketbox.com.ng';
 
-const paystackData = await initializeTransaction({
-  email: buyerEmail,
-  amount: total,
-  reference,
-  metadata: {
-    eventId,
-    ticketId,
-    quantity,
-    subtotal,
-    serviceFee,
-    total,
-  },
-  callbackUrl: `${baseUrl}/checkout/success?reference=${reference}`,
-  subaccount: organizer.paystack_subaccount_code,
-  bearer: 'account', // platform bears Paystack fee
-});
+    const paystackData = await initializeTransaction({
+      email: buyerEmail,
+      amount: total,
+      reference,
+      metadata: {
+        eventId,
+        ticketId,
+        quantity,
+        subtotal,
+        serviceFee,
+        total,
+      },
+      callbackUrl: `${baseUrl}/checkout/success?reference=${reference}`,
+      subaccount: organizer.paystack_subaccount_code,
+      bearer: 'account',
+    });
 
     await supabase.from('orders').insert([
       {
