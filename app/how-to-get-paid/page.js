@@ -32,7 +32,10 @@ export default function HowToGetPaidPage() {
               and sign up with:
             </p>
             <ul>
-              <li>Your <strong>full legal name</strong> (as it appears on your bank account)</li>
+              <li>
+                Your <strong>full legal name</strong> (as it appears on your
+                bank account)
+              </li>
               <li>Your email address</li>
               <li>A password (at least 6 characters)</li>
             </ul>
@@ -53,21 +56,25 @@ export default function HowToGetPaidPage() {
               <strong>Account → Payout account</strong>.
             </p>
             <ol>
-              <li>Select your <strong>bank</strong> from the list</li>
-              <li>Enter your <strong>10-digit account number</strong></li>
+              <li>
+                Select your <strong>bank</strong> from the list
+              </li>
+              <li>
+                Enter your <strong>10-digit account number</strong>
+              </li>
               <li>
                 Your <strong>account name</strong> will auto-fill from your bank
               </li>
-              <li>Tap <strong>Save payout account</strong></li>
+              <li>
+                Tap <strong>Save payout account</strong>
+              </li>
             </ol>
             <div className="guide-note">
               <strong>Important:</strong> Your bank account name must match the
               name you used to sign up. If they don&apos;t match, we can&apos;t
               verify you, and your account won&apos;t be approved.
             </div>
-            <p>
-              Once saved, you&apos;re ready to receive money. 💰
-            </p>
+            <p>Once saved, you&apos;re ready to receive money. 💰</p>
           </div>
         </div>
 
@@ -109,15 +116,20 @@ export default function HowToGetPaidPage() {
           <div className="guide-step-body">
             <p>
               On your event page, tap <strong>Share event</strong> to send the
-              link to WhatsApp, Instagram, Twitter, or wherever your audience is.
+              link to WhatsApp, Instagram, Twitter, or wherever your audience
+              is.
             </p>
-            <p>
-              Buyers can pay in three ways:
-            </p>
+            <p>Buyers can pay in three ways:</p>
             <ul>
-              <li><strong>Card</strong> (any Nigerian debit or credit card)</li>
-              <li><strong>Bank transfer</strong></li>
-              <li><strong>USSD</strong></li>
+              <li>
+                <strong>Card</strong> (any Nigerian debit or credit card)
+              </li>
+              <li>
+                <strong>Bank transfer</strong>
+              </li>
+              <li>
+                <strong>USSD</strong>
+              </li>
             </ul>
             <p>
               No Paystack account needed for buyers. They pay directly on your
@@ -131,9 +143,7 @@ export default function HowToGetPaidPage() {
           <div className="guide-step-num">5</div>
           <h2 className="guide-step-title">Get paid</h2>
           <div className="guide-step-body">
-            <p>
-              Here&apos;s how the money works:
-            </p>
+            <p>Here&apos;s how the money works:</p>
             <ul>
               <li>
                 For every ticket sold, you receive{' '}
@@ -144,8 +154,9 @@ export default function HowToGetPaidPage() {
                 buyer pays on top (so you keep your full price)
               </li>
               <li>
-                Money is settled <strong>directly to your bank account</strong>{' '}
-                the next business day after each sale
+                Money is settled{' '}
+                <strong>directly to your bank account</strong> the next
+                business day after each sale
               </li>
             </ul>
             <div className="guide-note">
@@ -174,8 +185,8 @@ export default function HowToGetPaidPage() {
                 buyer&apos;s QR code
               </li>
               <li>
-                <strong>Green ✅</strong> = valid ticket · <strong>Red ❌</strong>{' '}
-                = already used or invalid
+                <strong>Green ✅</strong> = valid ticket ·{' '}
+                <strong>Red ❌</strong> = already used or invalid
               </li>
             </ol>
             <p>
@@ -190,15 +201,19 @@ export default function HowToGetPaidPage() {
           <h2>Common questions</h2>
 
           <div className="guide-faq-item">
-            <div className="guide-faq-q">What if my bank name doesn&apos;t match my signup name?</div>
+            <div className="guide-faq-q">
+              What if my bank name doesn&apos;t match my signup name?
+            </div>
             <div className="guide-faq-a">
-              Contact support at <strong>hello@ticketbox.com.ng</strong>. We
-              can update the record or help you sort it with your bank.
+              Contact support at <strong>ticketboxhq@gmail.com</strong>. We can
+              update the record or help you sort it with your bank.
             </div>
           </div>
 
           <div className="guide-faq-item">
-            <div className="guide-faq-q">When do I actually receive the money?</div>
+            <div className="guide-faq-q">
+              When do I actually receive the money?
+            </div>
             <div className="guide-faq-a">
               Money settles to your bank the next business day after each sale.
               Weekends may push to Monday.
@@ -223,9 +238,9 @@ export default function HowToGetPaidPage() {
           <div className="guide-faq-item">
             <div className="guide-faq-q">Can I make a ticket invite-only?</div>
             <div className="guide-faq-a">
-              Yes. When creating a ticket, check the &quot;Invite-only&quot; box
-              and set a password. Only people you share the password with can
-              see and buy that ticket.
+              Yes. When creating a ticket, check the &quot;Invite-only&quot;
+              box and set a password. Only people you share the password with
+              can see and buy that ticket.
             </div>
           </div>
         </div>
@@ -242,8 +257,11 @@ export default function HowToGetPaidPage() {
         <div className="guide-contact">
           <p>
             Questions? Email us at{' '}
-            <a href="mailto:hello@ticketbox.com.ng" className="guide-link">
-              hello@ticketbox.com.ng
+            <a
+              href="mailto:ticketboxhq@gmail.com"
+              className="guide-link"
+            >
+              ticketboxhq@gmail.com
             </a>
           </p>
         </div>
