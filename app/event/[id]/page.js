@@ -8,6 +8,50 @@ import { getEvent, getTicketTypes } from '../../../lib/events';
 
 export const dynamic = 'force-dynamic';
 
+export async function generateMetadata({ params }) {
+  try {
+    const event = await getEvent(params.id);
+
+    if (!event) {
+      return {
+        title: 'Event not found — TicketBox',
+      };
+    }
+
+    const descPlain = (event.description || '')
+      .replace(/<[^>]*>/g, '')
+      .slice(0, 160)
+      .trim();
+
+    const description = descPlain || `Get your tickets for ${event.title} on TicketBox.`;
+
+    const images = event.image_url ? [{ url: event.image_url }] : [];
+
+    return {
+      title: `${event.title} — TicketBox`,
+      description,
+      openGraph: {
+        title: event.title,
+        description,
+        url: `https://ticketbox.com.ng/event/${event.id}`,
+        siteName: 'TicketBox',
+        images,
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: event.title,
+        description,
+        images: event.image_url ? [event.image_url] : [],
+      },
+    };
+  } catch (err) {
+    return {
+      title: 'Event — TicketBox',
+    };
+  }
+}
+
 export default async function EventPage({ params }) {
   let event;
   let tickets = [];
@@ -39,7 +83,11 @@ export default async function EventPage({ params }) {
       {isDraft && <DraftBanner eventId={event.id} />}
       <div className={`event-detail theme-${theme}`}>
         {event.image_url ? (
-          <img src={event.image_url} alt={event.title} className="event-hero-img" />
+          <img
+            src={event.image_url}
+            alt={event.title}
+            className="event-hero-img"
+          />
         ) : (
           <div className="event-hero">{event.emoji || '🎉'}</div>
         )}
@@ -68,4 +116,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-}
+       }
