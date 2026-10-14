@@ -67,11 +67,16 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await signUp(email, password, firstName.trim(), lastName.trim(), middleName.trim());
+      await signUp(
+        email,
+        password,
+        firstName.trim(),
+        lastName.trim(),
+        middleName.trim()
+      );
       setSuccess(
         'Account created! Check your email to confirm your account, then log in.'
       );
-      // Reset signup fields
       setFirstName('');
       setMiddleName('');
       setLastName('');
@@ -124,6 +129,15 @@ export default function LoginPage() {
                 onChange={(e) => setLoginPassword(e.target.value)}
                 required
               />
+              <div style={{ textAlign: 'right', marginTop: -4 }}>
+                <Link
+                  href="/forgot-password"
+                  className="auth-link"
+                  style={{ fontSize: 13 }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <button type="submit" disabled={loading}>
                 {loading ? 'Logging in...' : 'Log in'}
               </button>
