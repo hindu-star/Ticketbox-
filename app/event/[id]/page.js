@@ -13,42 +13,57 @@ export async function generateMetadata({ params }) {
     const event = await getEvent(params.id);
 
     if (!event) {
-      return {
-        title: 'Event not found — TicketBox',
-      };
+      return { title: 'Event not found — TicketBox' };
     }
 
     const descPlain = (event.description || '')
       .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
       .slice(0, 160)
       .trim();
 
-    const description = descPlain || `Get your tickets for ${event.title} on TicketBox.`;
+    const description =
+      descPlain || `Get your tickets for ${event.title} on TicketBox.`;
 
-    const images = event.image_url ? [{ url: event.image_url }] : [];
+    const imageUrl = event.image_url;
 
     return {
       title: `${event.title} — TicketBox`,
       description,
+      metadataBase: new URL('https://ticketbox.com.ng'),
+      alternates: {
+        canonical: `https://ticketbox.com.ng/event/${event.id}`,
+      },
       openGraph: {
         title: event.title,
         description,
         url: `https://ticketbox.com.ng/event/${event.id}`,
         siteName: 'TicketBox',
-        images,
+        locale: 'en_NG',
         type: 'website',
+        images: imageUrl
+          ? [
+              {
+                url: imageUrl,
+                secureUrl: imageUrl,
+                width: 1200,
+                height: 630,
+                alt: event.title,
+                type: 'image/jpeg',
+              },
+            ]
+          : [],
       },
       twitter: {
         card: 'summary_large_image',
         title: event.title,
         description,
-        images: event.image_url ? [event.image_url] : [],
+        site: '@ticketboxng',
+        images: imageUrl ? [imageUrl] : [],
       },
     };
   } catch (err) {
-    return {
-      title: 'Event — TicketBox',
-    };
+    return { title: 'Event — TicketBox' };
   }
 }
 
@@ -116,4 +131,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-       }
+    }
