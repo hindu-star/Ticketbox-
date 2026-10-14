@@ -2,7 +2,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import EventCard from '../components/EventCard';
 import Link from 'next/link';
-import { getPublishedEvents, addSoldOutFlags } from '../lib/events';
+import { getUpcomingPublishedEvents, addSoldOutFlags } from '../lib/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export default async function HomePage() {
   let events = [];
 
   try {
-    const all = await getPublishedEvents();
+    const all = await getUpcomingPublishedEvents();
     const withFlags = await addSoldOutFlags(all);
     events = withFlags.slice(0, 8);
   } catch (err) {
@@ -21,7 +21,6 @@ export default async function HomePage() {
     <>
       <Navbar />
 
-      {/* HERO */}
       <section className="landing-hero">
         <div className="landing-hero-badge">
           🎟️ Nigeria&apos;s easiest way to sell event tickets
@@ -50,7 +49,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TRENDING EVENTS */}
       <section className="section">
         <div className="landing-section-header">
           <h2>🔥 Trending now</h2>
@@ -92,7 +90,6 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* HOW IT WORKS */}
       <section className="landing-how">
         <div className="landing-how-inner">
           <div className="landing-how-label">How it works</div>
@@ -138,13 +135,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* WHY TICKETBOX */}
       <section className="landing-why">
         <div className="landing-why-inner">
           <div className="landing-why-label">Why organizers pick TicketBox</div>
-          <h2 className="landing-why-title">
-            Built for Nigerian events.
-          </h2>
+          <h2 className="landing-why-title">Built for Nigerian events.</h2>
 
           <div className="landing-features">
             <div className="landing-feature">
@@ -204,13 +198,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
       <section className="landing-testimonials">
         <div className="landing-testimonials-inner">
           <div className="landing-how-label">From organizers</div>
-          <h2 className="landing-how-title">
-            Loved by early users.
-          </h2>
+          <h2 className="landing-how-title">Loved by early users.</h2>
 
           <div className="landing-quotes">
             <div className="landing-quote">
@@ -222,7 +213,9 @@ export default async function HomePage() {
                 <div className="landing-quote-avatar">A</div>
                 <div>
                   <div className="landing-quote-name">Adebayo O.</div>
-                  <div className="landing-quote-role">Lagos party organizer</div>
+                  <div className="landing-quote-role">
+                    Lagos party organizer
+                  </div>
                 </div>
               </div>
             </div>
@@ -236,7 +229,9 @@ export default async function HomePage() {
                 <div className="landing-quote-avatar">C</div>
                 <div>
                   <div className="landing-quote-name">Chidinma E.</div>
-                  <div className="landing-quote-role">Conference organizer</div>
+                  <div className="landing-quote-role">
+                    Conference organizer
+                  </div>
                 </div>
               </div>
             </div>
@@ -258,7 +253,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="landing-faq">
         <div className="landing-faq-inner">
           <h2 className="landing-how-title">Common questions</h2>
@@ -275,8 +269,8 @@ export default async function HomePage() {
           <details className="landing-faq-item">
             <summary>When do I receive my money?</summary>
             <p>
-              Money settles directly to your Nigerian bank account the
-              <strong> next business day</strong> after each sale. Weekends may
+              Money settles directly to your Nigerian bank account the{' '}
+              <strong>next business day</strong> after each sale. Weekends may
               push to Monday.
             </p>
           </details>
@@ -298,7 +292,9 @@ export default async function HomePage() {
           </details>
 
           <details className="landing-faq-item">
-            <summary>What if my bank account name doesn&apos;t match my profile name?</summary>
+            <summary>
+              What if my bank account name doesn&apos;t match my profile name?
+            </summary>
             <p>
               Update your <strong>Personal profile</strong> to match your bank
               name exactly, then retry. For business accounts, use the business
@@ -308,7 +304,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
       <section className="landing-final-cta">
         <div className="landing-final-cta-inner">
           <h2>Ready to sell your first ticket?</h2>
@@ -322,4 +317,4 @@ export default async function HomePage() {
       <Footer />
     </>
   );
-        }
+                  }
