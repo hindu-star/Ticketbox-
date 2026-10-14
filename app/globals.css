@@ -2630,3 +2630,64 @@ a.blog-card { display: block; color: inherit; }
     width: 100%;
   }
   }
+/* DRAWER ACCOUNT SECTION */
+.drawer-account-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gray-700);
+  border: none;
+  border-bottom: 1px solid var(--gray-100);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+.drawer-account-toggle:hover {
+  color: var(--blue);
+}
+.drawer-chevron {
+  font-size: 20px;
+  transition: transform 0.2s;
+  color: var(--gray-500);
+}
+.drawer-chevron.open {
+  transform: rotate(90deg);
+}
+.drawer-account-items {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 4px 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.drawer-account-items a {
+  padding: 10px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
+  border-bottom: none;
+}
+.drawer-account-items a:hover {
+  color: var(--blue);
+}
+
+/* ACCOUNT PAGES */
+.account-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+.account-page h1 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.account-page > p {
+  color: var(--gray-500);
+  margin-bottom: 24px;
+}
