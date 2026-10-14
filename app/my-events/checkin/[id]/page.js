@@ -10,8 +10,8 @@ import {
   getEvent,
   getCheckInPin,
   setCheckInPin,
-  checkInOrder,
-  getCheckInStats,
+  checkInTicket,
+  getCheckInStatsByTickets,
 } from '../../../../lib/events';
 
 const PIN_STORAGE_PREFIX = 'tb_checkin_pin_';
@@ -38,7 +38,6 @@ export default function CheckInPage() {
   const [stats, setStats] = useState(null);
   const [manualRef, setManualRef] = useState('');
 
-  const scannerRef = useRef(null);
   const html5QrRef = useRef(null);
 
   useEffect(() => {
@@ -81,7 +80,7 @@ export default function CheckInPage() {
 
   async function loadStats() {
     try {
-      const s = await getCheckInStats(eventId);
+      const s = await getCheckInStatsByTickets(eventId);
       setStats(s);
     } catch (err) {
       console.error('Stats error:', err);
@@ -116,7 +115,6 @@ export default function CheckInPage() {
 
   function handleVerifyPin(e) {
     e.preventDefault();
-    // We stored the pin locally; verify by fetching
     getCheckInPin(eventId).then((actualPin) => {
       if (actualPin === pinInput) {
         localStorage.setItem(PIN_STORAGE_PREFIX + eventId, pinInput);
@@ -143,15 +141,12 @@ export default function CheckInPage() {
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText) => {
-          // Pause scanning while we process
           try {
             await scanner.pause(true);
           } catch (e) {}
           await handleDecoded(decodedText);
         },
-        () => {
-          // Ignore decode errors (happens every frame)
-        }
+        () => {}
       );
     } catch (err) {
       console.error('Scanner error:', err);
@@ -177,21 +172,19 @@ export default function CheckInPage() {
   }
 
   async function handleDecoded(decodedText) {
-    // Extract order reference from QR JSON, or use raw text
-    let reference = decodedText;
+    let ticketId = decodedText;
     try {
       const parsed = JSON.parse(decodedText);
-      if (parsed && parsed.orderId) reference = parsed.orderId;
+      if (parsed && parsed.ticketId) ticketId = parsed.ticketId;
     } catch (e) {
-      // Not JSON — treat as raw reference
+      // not JSON
     }
-
-    await processReference(reference);
+    await processReference(ticketId);
   }
 
   async function processReference(reference) {
     try {
-      const result = await checkInOrder(reference);
+      const result = await checkInTicket(reference);
       setScanResult(result);
       loadStats();
     } catch (err) {
@@ -216,7 +209,6 @@ export default function CheckInPage() {
       try {
         await html5QrRef.current.resume();
       } catch (e) {
-        // If resume fails, restart
         await stopScanner();
         startScanner();
       }
@@ -378,16 +370,15 @@ export default function CheckInPage() {
               </div>
             </div>
             <div className="checkin-stat">
-              <div className="checkin-stat-label">Orders scanned</div>
+              <div className="checkin-stat-label">Remaining</div>
               <div className="checkin-stat-value">
-                {stats.checkedInOrders} / {stats.ordersCount}
+                {stats.totalTickets - stats.checkedInTickets}
               </div>
             </div>
           </div>
         )}
 
-        {/* Scanner viewport */}
-        <div id="qr-reader" ref={scannerRef} className="qr-reader-box" />
+        <div id="qr-reader" className="qr-reader-box" />
 
         {!scanning && !scanResult && (
           <button
@@ -409,7 +400,6 @@ export default function CheckInPage() {
           </button>
         )}
 
-        {/* Scan result overlay */}
         {scanResult && (
           <div className={`scan-result scan-result-${scanResult.status}`}>
             {scanResult.status === 'success' && (
@@ -417,13 +407,9 @@ export default function CheckInPage() {
                 <div className="scan-result-icon">✅</div>
                 <div className="scan-result-title">Checked in!</div>
                 <div className="scan-result-body">
-                  <div>{scanResult.order.buyer_email}</div>
+                  <div>{scanResult.order?.buyer_email || 'Valid ticket'}</div>
                   <div>
-                    {scanResult.order.quantity} ticket
-                    {scanResult.order.quantity === 1 ? '' : 's'}
-                  </div>
-                  <div className="scan-result-ref">
-                    {scanResult.order.paystack_reference}
+                    Ticket #{scanResult.ticket_number || '1'}
                   </div>
                 </div>
               </>
@@ -434,10 +420,9 @@ export default function CheckInPage() {
                 <div className="scan-result-icon">⚠️</div>
                 <div className="scan-result-title">Already checked in</div>
                 <div className="scan-result-body">
-                  <div>{scanResult.order.buyer_email}</div>
+                  <div>{scanResult.order?.buyer_email || 'Valid ticket'}</div>
                   <div>
-                    Scanned at{' '}
-                    {formatTime(scanResult.order.checked_in_at)}
+                    Scanned at {formatTime(scanResult.ticket?.checked_in_at)}
                   </div>
                 </div>
               </>
@@ -448,8 +433,8 @@ export default function CheckInPage() {
                 <div className="scan-result-icon">❌</div>
                 <div className="scan-result-title">Not paid</div>
                 <div className="scan-result-body">
-                  <div>{scanResult.order.buyer_email}</div>
-                  <div>Status: {scanResult.order.status}</div>
+                  <div>{scanResult.order?.buyer_email || ''}</div>
+                  <div>Status: {scanResult.order?.status}</div>
                 </div>
               </>
             )}
@@ -459,7 +444,7 @@ export default function CheckInPage() {
                 <div className="scan-result-icon">❌</div>
                 <div className="scan-result-title">Invalid ticket</div>
                 <div className="scan-result-body">
-                  No order found for this QR code.
+                  No ticket found for this QR code.
                 </div>
               </>
             )}
@@ -490,13 +475,12 @@ export default function CheckInPage() {
           </div>
         )}
 
-        {/* Manual entry */}
         <div className="checkin-manual">
-          <label>Or enter order reference manually</label>
+          <label>Or paste a ticket ID manually</label>
           <form onSubmit={handleManualSubmit} className="checkin-manual-form">
             <input
               type="text"
-              placeholder="TB-..."
+              placeholder="Paste ticket ID from email"
               value={manualRef}
               onChange={(e) => setManualRef(e.target.value)}
             />
@@ -504,21 +488,22 @@ export default function CheckInPage() {
           </form>
         </div>
 
-        {/* Recent check-ins */}
         {stats && stats.recent.length > 0 && (
           <div className="checkin-recent">
             <h2>Recently checked in</h2>
             <div className="checkin-recent-list">
-              {stats.recent.map((o) => (
-                <div key={o.id} className="checkin-recent-row">
+              {stats.recent.map((t) => (
+                <div key={t.id} className="checkin-recent-row">
                   <div>
-                    <div className="checkin-recent-email">{o.buyer_email}</div>
+                    <div className="checkin-recent-email">
+                      {t.orders?.buyer_email || 'Buyer'}
+                    </div>
                     <div className="checkin-recent-meta">
-                      {o.quantity} ticket{o.quantity === 1 ? '' : 's'}
+                      Ticket #{t.ticket_number}
                     </div>
                   </div>
                   <div className="checkin-recent-time">
-                    {formatTime(o.checked_in_at)}
+                    {formatTime(t.checked_in_at)}
                   </div>
                 </div>
               ))}
@@ -529,4 +514,4 @@ export default function CheckInPage() {
       <Footer />
     </>
   );
-    }
+      }
