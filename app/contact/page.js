@@ -15,7 +15,9 @@ export default function ContactPage() {
   function handleSubmit(e) {
     e.preventDefault();
     const subject = encodeURIComponent(`TicketBox enquiry from ${name}`);
-    const body = encodeURIComponent(`${message}\n\n—\nFrom: ${name}\nReply to: ${email}`);
+    const body = encodeURIComponent(
+      `${message}\n\n—\nFrom: ${name}\nReply to: ${email}`
+    );
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
     setSent(true);
   }
@@ -26,7 +28,8 @@ export default function ContactPage() {
       <div className="content-page">
         <h1>Contact us</h1>
         <p className="content-lead">
-          Questions, feedback, or partnership ideas? We&apos;d love to hear from you.
+          Questions, feedback, or partnership ideas? We&apos;d love to hear from
+          you.
         </p>
 
         <div className="content-section">
@@ -88,4 +91,4 @@ export default function ContactPage() {
       <Footer />
     </>
   );
-}
+            }
