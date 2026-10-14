@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { supabase } from '../../../lib/supabase';
 import {
   getProfile,
   updatePayoutAccount,
-  getSignupName,
+  getCurrentName,
   namesMatch,
 } from '../../../lib/profile';
 
@@ -76,10 +77,8 @@ export default function PayoutsPage() {
     loadBanks();
   }, [router]);
 
-  // Auto-resolve when account number is 10 digits and bank is selected
   useEffect(() => {
     if (accountNumber.length === 10 && selectedBankCode) {
-      // Only auto-resolve if the number or bank changed from what's saved
       if (
         accountNumber !== existingAccountNumber ||
         selectedBankCode !== existingBankCodeFromName()
@@ -155,13 +154,13 @@ export default function PayoutsPage() {
       return;
     }
 
-    // Get signup name for comparison
-    const signupName = await getSignupName();
-    const { match, reason } = namesMatch(accountName, signupName);
+    // Check if the bank account name matches the user's current profile name
+    const currentName = await getCurrentName();
+    const { match, reason } = namesMatch(accountName, currentName);
 
     if (!match) {
       setError(
-        `Your bank account name doesn't match your signup name. (${reason})`
+        `Your bank account name doesn't match your profile name. ${reason} — Update your Personal profile to match, or contact support.`
       );
       return;
     }
@@ -176,34 +175,35 @@ export default function PayoutsPage() {
       }
 
       await updatePayoutAccount(user.id, {
-  bank_code: selectedBankCode,
-  bank_name: selectedBankName,
-  account_number: accountNumber,
-  account_name: accountName,
-});
+        bank_code: selectedBankCode,
+        bank_name: selectedBankName,
+        account_number: accountNumber,
+        account_name: accountName,
+      });
 
-// Create Paystack subaccount so funds can be split automatically
-const subRes = await fetch('/api/paystack/subaccount', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ userId: user.id }),
-});
+      // Create Paystack subaccount so funds can be split automatically
+      const subRes = await fetch('/api/paystack/subaccount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
 
-const subData = await subRes.json();
+      const subData = await subRes.json();
 
-if (!subRes.ok) {
-  // Bank details saved, but subaccount failed — show warning
-  setError(
-    `Bank details saved, but Paystack setup failed: ${subData.error || 'Unknown error'}. Contact support.`
-  );
-  setSaving(false);
-  return;
-}
+      if (!subRes.ok) {
+        setError(
+          `Bank details saved, but Paystack setup failed: ${
+            subData.error || 'Unknown error'
+          }. Contact support.`
+        );
+        setSaving(false);
+        return;
+      }
 
-setExistingAccountNumber(accountNumber);
-setExistingAccountName(accountName);
-setExistingBankName(selectedBankName);
-setSuccess('Payout account saved and verified.');
+      setExistingAccountNumber(accountNumber);
+      setExistingAccountName(accountName);
+      setExistingBankName(selectedBankName);
+      setSuccess('Payout account saved and verified.');
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to save payout account');
@@ -231,7 +231,7 @@ setSuccess('Payout account saved and verified.');
         <h1>Payout account</h1>
         <p>
           Add your bank account to receive payouts from ticket sales. The
-          account name must match your signup name.
+          account name must match your profile name.
         </p>
 
         {existingAccountNumber && !success && (
@@ -302,10 +302,18 @@ setSuccess('Payout account saved and verified.');
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={saving || !resolved}
-          >
+          <p className="field-hint" style={{ marginTop: 8 }}>
+            If your bank name doesn&apos;t match your profile name, update your{' '}
+            <Link
+              href="/account/personal"
+              style={{ color: 'var(--blue)', fontWeight: 600 }}
+            >
+              Personal profile
+            </Link>{' '}
+            first.
+          </p>
+
+          <button type="submit" disabled={saving || !resolved}>
             {saving ? 'Saving...' : 'Save payout account'}
           </button>
         </form>
@@ -313,4 +321,4 @@ setSuccess('Payout account saved and verified.');
       <Footer />
     </>
   );
-            }
+      }
