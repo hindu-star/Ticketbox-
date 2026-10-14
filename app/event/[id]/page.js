@@ -4,7 +4,7 @@ import Footer from '../../../components/Footer';
 import ShareButton from '../../../components/ShareButton';
 import EventTickets from '../../../components/EventTickets';
 import DraftBanner from '../../../components/DraftBanner';
-import { getEvent, getTicketTypes } from '../../../lib/events';
+import { getEvent, getTicketTypes, isEventEnded } from '../../../lib/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +49,6 @@ export async function generateMetadata({ params }) {
                 width: 1200,
                 height: 630,
                 alt: event.title,
-                type: 'image/jpeg',
               },
             ]
           : [],
@@ -58,7 +57,6 @@ export async function generateMetadata({ params }) {
         card: 'summary_large_image',
         title: event.title,
         description,
-        site: '@ticketboxng',
         images: imageUrl ? [imageUrl] : [],
       },
     };
@@ -81,6 +79,7 @@ export default async function EventPage({ params }) {
   if (!event) notFound();
 
   const isDraft = event.status === 'draft';
+  const ended = isEventEnded(event);
   const theme = event.theme || 'classic';
 
   const formattedDate = event.event_date
@@ -117,6 +116,13 @@ export default async function EventPage({ params }) {
             <div>📍 {event.location}</div>
           </div>
 
+          {ended && (
+            <div className="event-ended-banner">
+              <strong>This event has ended.</strong> Tickets are no longer
+              available.
+            </div>
+          )}
+
           <div
             className="event-desc"
             dangerouslySetInnerHTML={{
@@ -125,10 +131,14 @@ export default async function EventPage({ params }) {
           />
 
           <h2 className="ticket-heading">Tickets</h2>
-          <EventTickets eventId={event.id} tickets={tickets} />
+          <EventTickets
+            eventId={event.id}
+            tickets={tickets}
+            ended={ended}
+          />
         </div>
       </div>
       <Footer />
     </>
   );
-    }
+}
