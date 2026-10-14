@@ -68,14 +68,13 @@ export default function Navbar() {
         <Link href="/create" className="navbar-cta">+ Create</Link>
         {loading ? null : user ? (
           <>
-            <Link
-              href="/my-events"
+            <div
               className="navbar-avatar"
               style={{ background: avatarColor }}
               title={user.email}
             >
               {initial}
-            </Link>
+            </div>
             <button onClick={handleLogout} className="navbar-logout">Log out</button>
           </>
         ) : (
@@ -86,14 +85,13 @@ export default function Navbar() {
       {/* Mobile: avatar + hamburger */}
       <div className="navbar-mobile">
         {!loading && user && (
-          <Link
-            href="/my-events"
+          <div
             className="navbar-avatar"
             style={{ background: avatarColor }}
             title={user.email}
           >
             {initial}
-          </Link>
+          </div>
         )}
         <button
           className="navbar-burger"
@@ -112,7 +110,7 @@ export default function Navbar() {
           {loading ? null : user ? (
             <>
               <Link href="/browse">Browse</Link>
-              <Link href="/my-events">Events</Link>
+              <Link href="/my-events">My Events</Link>
 
               <button
                 type="button"
