@@ -40,7 +40,6 @@ export default function MyEventsPage() {
         const myEvents = await getMyEvents(user.id);
         setEvents(myEvents);
 
-        // Load stats for each event in parallel
         const statsMap = {};
         await Promise.all(
           myEvents.map(async (e) => {
@@ -206,9 +205,7 @@ export default function MyEventsPage() {
                   <div className="dashboard-row-info">
                     <div className="dashboard-row-title">
                       {e.title}
-                      {isDraft && (
-                        <span className="draft-badge">Draft</span>
-                      )}
+                      {isDraft && <span className="draft-badge">Draft</span>}
                       {!isDraft && ended && (
                         <span className="ended-badge">Ended</span>
                       )}
@@ -248,6 +245,14 @@ export default function MyEventsPage() {
                     >
                       Edit
                     </Link>
+                    {!isDraft && (
+                      <Link
+                        href={`/my-events/checkin/${e.id}`}
+                        className="dash-btn"
+                      >
+                        Check-in
+                      </Link>
+                    )}
                     {isDraft ? (
                       <button
                         onClick={() => handlePublish(e.id)}
@@ -282,4 +287,4 @@ export default function MyEventsPage() {
       <Footer />
     </>
   );
-                }
+    }
