@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 
 export default function DraftBanner({ eventId }) {
-  const [state, setState] = useState('checking'); // checking | owner | not_owner
+  const [state, setState] = useState('checking');
   const router = useRouter();
 
   useEffect(() => {
