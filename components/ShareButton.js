@@ -29,7 +29,8 @@ export default function ShareButton({ eventId, title }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const baseUrl =
+    typeof window !== 'undefined' ? window.location.origin : '';
   const url = `${baseUrl}/event/${eventId}`;
 
   async function copyLink() {
@@ -62,23 +63,26 @@ export default function ShareButton({ eventId, title }) {
     }
   }
 
-  // WhatsApp — short text + URL on its own line
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-    `🎟️ ${title}\n\n${url}`
-  )}`;
+  // WhatsApp — text + newline + URL. URL must be LAST, alone on its line.
+  const whatsappUrl =
+    'https://wa.me/?text=' +
+    encodeURIComponent(`🎟️ ${title}\n\n${url}`);
 
-  // Telegram — URL only, Telegram auto-generates rich preview
-  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}`;
+  // Telegram — URL ONLY. Telegram uses OG tags. Don't add text.
+  const telegramUrl =
+    'https://t.me/share/url?url=' + encodeURIComponent(url);
 
-  // Twitter/X — short text + URL
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-    `Check out "${title}" on TicketBox 🎟️`
-  )}&url=${encodeURIComponent(url)}`;
+  // Twitter/X — text + URL (X renders card from URL)
+  const twitterUrl =
+    'https://twitter.com/intent/tweet?text=' +
+    encodeURIComponent(`Check out "${title}" on TicketBox 🎟️`) +
+    '&url=' +
+    encodeURIComponent(url);
 
-  // Facebook — URL only, Facebook auto-generates rich preview
-  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-    url
-  )}`;
+  // Facebook — URL ONLY. FB uses OG tags. Don't add text.
+  const facebookUrl =
+    'https://www.facebook.com/sharer/sharer.php?u=' +
+    encodeURIComponent(url);
 
   return (
     <div className="share-wrap">
@@ -92,10 +96,18 @@ export default function ShareButton({ eventId, title }) {
 
       {open && (
         <div className="share-menu">
-          <button type="button" className="share-item" onClick={nativeShare}>
+          <button
+            type="button"
+            className="share-item"
+            onClick={nativeShare}
+          >
             <span>📱</span> Share via...
           </button>
-          <button type="button" className="share-item" onClick={copyLink}>
+          <button
+            type="button"
+            className="share-item"
+            onClick={copyLink}
+          >
             <span>{copied ? '✅' : '🔗'}</span>
             {copied ? 'Link copied!' : 'Copy link'}
           </button>
@@ -135,4 +147,4 @@ export default function ShareButton({ eventId, title }) {
       )}
     </div>
   );
-        }
+}
