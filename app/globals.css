@@ -2792,3 +2792,182 @@ a.blog-card { display: block; color: inherit; }
   font-size: 13px;
   color: var(--gray-500);
 }
+/* GUIDE PAGE */
+.guide-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+.guide-page h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+.guide-lead {
+  font-size: 17px;
+  color: var(--gray-700);
+  line-height: 1.6;
+  margin-bottom: 48px;
+}
+
+/* STEPS */
+.guide-step {
+  position: relative;
+  padding-left: 60px;
+  margin-bottom: 40px;
+}
+.guide-step-num {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-weight: 800;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+.guide-step-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: 12px;
+  color: var(--black);
+}
+.guide-step-body p {
+  color: var(--gray-700);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.guide-step-body ul,
+.guide-step-body ol {
+  padding-left: 22px;
+  margin-bottom: 14px;
+  color: var(--gray-700);
+  line-height: 1.8;
+}
+.guide-step-body li {
+  margin-bottom: 4px;
+}
+.guide-step-body strong {
+  color: var(--black);
+  font-weight: 700;
+}
+
+/* NOTE BOX */
+.guide-note {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #78350f;
+  margin: 12px 0;
+}
+.guide-note strong {
+  color: #92400e;
+}
+
+/* LINK */
+.guide-link {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* FAQ */
+.guide-faq {
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid var(--gray-200);
+}
+.guide-faq h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+}
+.guide-faq-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.guide-faq-item:last-child {
+  border-bottom: none;
+}
+.guide-faq-q {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 6px;
+}
+.guide-faq-a {
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.7;
+}
+.guide-faq-a strong {
+  color: var(--black);
+}
+
+/* CTA */
+.guide-cta {
+  margin-top: 60px;
+  padding: 40px 24px;
+  background: var(--gray-50);
+  border-radius: 20px;
+  text-align: center;
+}
+.guide-cta h2 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.guide-cta p {
+  color: var(--gray-700);
+  margin-bottom: 20px;
+}
+
+.guide-contact {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--gray-500);
+}
+
+@media (max-width: 600px) {
+  .guide-page {
+    padding: 24px 16px 60px;
+  }
+  .guide-page h1 {
+    font-size: 24px;
+  }
+  .guide-lead {
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+  .guide-step {
+    padding-left: 52px;
+  }
+  .guide-step-num {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+  .guide-step-title {
+    font-size: 17px;
+  }
+  .guide-step-body p,
+  .guide-step-body ul,
+  .guide-step-body ol {
+    font-size: 14px;
+  }
+}
