@@ -50,22 +50,52 @@ export async function POST(request) {
     const total = subtotal + serviceFee;
 
     const reference = generateReference();
-    const baseUrl = request.headers.get('origin') || 'https://ticketbox.com.ng';
+    // Look up the event's organizer and their subaccount
+const { data: event, error: eventError } = await supabase
+  .from('events')
+  .select('organizer_id')
+  .eq('id', eventId)
+  .single();
 
-    const paystackData = await initializeTransaction({
-      email: buyerEmail,
-      amount: total,
-      reference,
-      metadata: {
-        eventId,
-        ticketId,
-        quantity,
-        subtotal,
-        serviceFee,
-        total,
-      },
-      callbackUrl: `${baseUrl}/checkout/success?reference=${reference}`,
-    });
+if (eventError || !event) {
+  return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+}
+
+const { data: organizer } = await supabase
+  .from('profiles')
+  .select('paystack_subaccount_code')
+  .eq('id', event.organizer_id)
+  .single();
+
+if (!organizer || !organizer.paystack_subaccount_code) {
+  return NextResponse.json(
+    {
+      error:
+        'This organizer has not set up payouts yet. Please contact them.',
+    },
+    { status: 400 }
+  );
+}
+
+const reference = generateReference();
+const baseUrl = request.headers.get('origin') || 'https://ticketbox.com.ng';
+
+const paystackData = await initializeTransaction({
+  email: buyerEmail,
+  amount: total,
+  reference,
+  metadata: {
+    eventId,
+    ticketId,
+    quantity,
+    subtotal,
+    serviceFee,
+    total,
+  },
+  callbackUrl: `${baseUrl}/checkout/success?reference=${reference}`,
+  subaccount: organizer.paystack_subaccount_code,
+  bearer: 'account', // platform bears Paystack fee
+});
 
     await supabase.from('orders').insert([
       {
