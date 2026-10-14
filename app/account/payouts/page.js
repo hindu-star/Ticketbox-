@@ -176,16 +176,34 @@ export default function PayoutsPage() {
       }
 
       await updatePayoutAccount(user.id, {
-        bank_code: selectedBankCode,
-        bank_name: selectedBankName,
-        account_number: accountNumber,
-        account_name: accountName,
-      });
+  bank_code: selectedBankCode,
+  bank_name: selectedBankName,
+  account_number: accountNumber,
+  account_name: accountName,
+});
 
-      setExistingAccountNumber(accountNumber);
-      setExistingAccountName(accountName);
-      setExistingBankName(selectedBankName);
-      setSuccess('Payout account saved.');
+// Create Paystack subaccount so funds can be split automatically
+const subRes = await fetch('/api/paystack/subaccount', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ userId: user.id }),
+});
+
+const subData = await subRes.json();
+
+if (!subRes.ok) {
+  // Bank details saved, but subaccount failed — show warning
+  setError(
+    `Bank details saved, but Paystack setup failed: ${subData.error || 'Unknown error'}. Contact support.`
+  );
+  setSaving(false);
+  return;
+}
+
+setExistingAccountNumber(accountNumber);
+setExistingAccountName(accountName);
+setExistingBankName(selectedBankName);
+setSuccess('Payout account saved and verified.');
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to save payout account');
