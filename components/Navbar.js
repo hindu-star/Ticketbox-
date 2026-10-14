@@ -131,6 +131,7 @@ export default function Navbar() {
               )}
 
               <Link href="/create">+ Create event</Link>
+              <Link href="/how-to-get-paid">How to get paid</Link>
               <Link href="/contact">Help</Link>
               <button onClick={handleLogout} className="drawer-logout">
                 Sign out
@@ -147,4 +148,4 @@ export default function Navbar() {
       )}
     </nav>
   );
-        }
+            }
