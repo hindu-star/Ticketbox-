@@ -2766,3 +2766,29 @@ a.blog-card { display: block; color: inherit; }
   font-family: inherit;
   background: transparent;
 }
+/* PAYOUT CURRENT ACCOUNT */
+.payout-current {
+  padding: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  background: var(--gray-50);
+  margin-bottom: 24px;
+}
+.payout-current-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+.payout-current-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 2px;
+}
+.payout-current-meta {
+  font-size: 13px;
+  color: var(--gray-500);
+}
