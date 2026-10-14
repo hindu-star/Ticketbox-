@@ -56,7 +56,6 @@ export default function OrganizerProfilePage() {
           setPicturePreview(profile.profile_picture_url || '');
         }
 
-        // Fallback for display name if empty
         if (!profile?.display_name) {
           const meta = user.user_metadata || {};
           const fallback = [meta.first_name, meta.last_name]
@@ -120,7 +119,6 @@ export default function OrganizerProfilePage() {
         return;
       }
 
-      // Check username availability
       const taken = await isUsernameTaken(username, user.id);
       if (taken) {
         setError('That username is already taken.');
@@ -128,7 +126,6 @@ export default function OrganizerProfilePage() {
         return;
       }
 
-      // Upload new picture if provided
       let finalPictureUrl = pictureUrl;
 
       if (pictureFile) {
@@ -193,7 +190,6 @@ export default function OrganizerProfilePage() {
         {success && <div className="auth-success">{success}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          {/* Profile picture */}
           <label className="organizer-picture-upload">
             {picturePreview ? (
               <img
@@ -216,7 +212,6 @@ export default function OrganizerProfilePage() {
             />
           </label>
 
-          {/* Username */}
           <label className="field-label">Username</label>
           <div className="username-input-wrap">
             <span className="username-prefix">ticketbox.com.ng/u/</span>
@@ -249,8 +244,9 @@ export default function OrganizerProfilePage() {
             style={{ background: '#f8fafc', color: '#64748b' }}
           />
 
+          <label className="field-label">About</label>
           <textarea
-            placeholder="Tell buyers about your events and your story..."
+            placeholder="Tell us about you"
             rows="4"
             value={about}
             onChange={(e) => setAbout(e.target.value)}
@@ -291,4 +287,4 @@ export default function OrganizerProfilePage() {
       <Footer />
     </>
   );
-                        }
+    }
