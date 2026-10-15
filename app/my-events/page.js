@@ -72,9 +72,13 @@ export default function MyEventsPage() {
   }
 
   const allEvents = events;
-  const publishedEvents = events.filter((e) => e.status !== 'draft' && !isEnded(e));
+  const publishedEvents = events.filter(
+    (e) => e.status !== 'draft' && !isEnded(e)
+  );
   const draftEvents = events.filter((e) => e.status === 'draft');
-  const endedEvents = events.filter((e) => e.status !== 'draft' && isEnded(e));
+  const endedEvents = events.filter(
+    (e) => e.status !== 'draft' && isEnded(e)
+  );
 
   const visibleEvents =
     tab === 'published'
@@ -107,7 +111,9 @@ export default function MyEventsPage() {
     try {
       await publishEvent(id);
       setEvents(
-        events.map((e) => (e.id === id ? { ...e, status: 'published' } : e))
+        events.map((e) =>
+          e.id === id ? { ...e, status: 'published' } : e
+        )
       );
     } catch (err) {
       alert('Failed to publish: ' + err.message);
@@ -126,7 +132,9 @@ export default function MyEventsPage() {
     try {
       await unpublishEvent(id);
       setEvents(
-        events.map((e) => (e.id === id ? { ...e, status: 'draft' } : e))
+        events.map((e) =>
+          e.id === id ? { ...e, status: 'draft' } : e
+        )
       );
     } catch (err) {
       alert('Failed to unpublish: ' + err.message);
@@ -165,7 +173,9 @@ export default function MyEventsPage() {
               onClick={() => setTab(t.id)}
             >
               {t.label}
-              {t.count > 0 && <span className="dash-tab-count">{t.count}</span>}
+              {t.count > 0 && (
+                <span className="dash-tab-count">{t.count}</span>
+              )}
             </button>
           ))}
         </div>
@@ -205,7 +215,9 @@ export default function MyEventsPage() {
                   <div className="dashboard-row-info">
                     <div className="dashboard-row-title">
                       {e.title}
-                      {isDraft && <span className="draft-badge">Draft</span>}
+                      {isDraft && (
+                        <span className="draft-badge">Draft</span>
+                      )}
                       {!isDraft && ended && (
                         <span className="ended-badge">Ended</span>
                       )}
@@ -213,11 +225,14 @@ export default function MyEventsPage() {
                     <div className="dashboard-row-meta">
                       📍 {e.location} · 📅{' '}
                       {e.event_date
-                        ? new Date(e.event_date).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })
+                        ? new Date(e.event_date).toLocaleDateString(
+                            'en-GB',
+                            {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            }
+                          )
                         : 'TBA'}
                     </div>
                     <div className="dashboard-row-stats">
@@ -251,6 +266,14 @@ export default function MyEventsPage() {
                         className="dash-btn"
                       >
                         Check-in
+                      </Link>
+                    )}
+                    {!isDraft && (
+                      <Link
+                        href={`/my-events/promo/${e.id}`}
+                        className="dash-btn"
+                      >
+                        Promo
                       </Link>
                     )}
                     {isDraft ? (
@@ -287,4 +310,4 @@ export default function MyEventsPage() {
       <Footer />
     </>
   );
-    }
+          }
