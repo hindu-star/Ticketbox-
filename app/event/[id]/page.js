@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import ShareButton from '../../../components/ShareButton';
@@ -7,6 +9,11 @@ import DraftBanner from '../../../components/DraftBanner';
 import { getEvent, getTicketTypes, isEventEnded } from '../../../lib/events';
 
 export const dynamic = 'force-dynamic';
+
+const supabasePublic = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export async function generateMetadata({ params }) {
   try {
@@ -68,10 +75,20 @@ export async function generateMetadata({ params }) {
 export default async function EventPage({ params }) {
   let event;
   let tickets = [];
+  let organizer = null;
 
   try {
     event = await getEvent(params.id);
     tickets = await getTicketTypes(params.id);
+
+    if (event.organizer_id) {
+      const { data } = await supabasePublic
+        .from('profiles')
+        .select('username, display_name, profile_picture_url')
+        .eq('id', event.organizer_id)
+        .maybeSingle();
+      organizer = data;
+    }
   } catch (err) {
     notFound();
   }
@@ -110,6 +127,35 @@ export default async function EventPage({ params }) {
             <h1>{event.title}</h1>
             <ShareButton eventId={event.id} title={event.title} />
           </div>
+
+          {organizer && organizer.username && (
+            <Link
+              href={`/u/${organizer.username}`}
+              className="event-organizer-link"
+            >
+              {organizer.profile_picture_url ? (
+                <img
+                  src={organizer.profile_picture_url}
+                  alt={
+                    organizer.display_name || organizer.username
+                  }
+                  className="event-organizer-avatar"
+                />
+              ) : (
+                <div className="event-organizer-avatar event-organizer-avatar-fallback">
+                  {(organizer.display_name ||
+                    organizer.username)[0].toUpperCase()}
+                </div>
+              )}
+              <span>
+                Organized by{' '}
+                <strong>
+                  {organizer.display_name || organizer.username}
+                </strong>
+              </span>
+            </Link>
+          )}
+
           <div className="event-meta">
             <div>📅 {formattedDate}</div>
             <div>🕐 {event.event_time || 'Time TBA'}</div>
@@ -126,7 +172,8 @@ export default async function EventPage({ params }) {
           <div
             className="event-desc"
             dangerouslySetInnerHTML={{
-              __html: event.description || '<p>Full details coming soon.</p>',
+              __html:
+                event.description || '<p>Full details coming soon.</p>',
             }}
           />
 
@@ -141,4 +188,4 @@ export default async function EventPage({ params }) {
       <Footer />
     </>
   );
-}
+            }
