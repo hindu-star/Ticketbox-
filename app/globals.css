@@ -4420,3 +4420,535 @@ a.blog-card { display: block; color: inherit; }
   color: var(--blue) !important;
   font-weight: 700 !important;
 }
+/* ========================================
+   MOBILE SPACING OVERHAUL
+   Applied at < 700px wide
+   ======================================== */
+@media (max-width: 700px) {
+
+  /* NAVBAR */
+  .navbar {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  .navbar-logo {
+    font-size: 18px;
+  }
+  .navbar-links {
+    gap: 12px;
+    font-size: 13px;
+  }
+  .navbar-cta {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .navbar-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  .navbar-logout {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .navbar-drawer {
+    padding: 12px 16px;
+  }
+  .navbar-drawer a,
+  .navbar-drawer button {
+    padding: 14px 4px;
+    font-size: 15px;
+  }
+
+  /* HERO / LANDING */
+  .hero {
+    padding: 40px 20px 32px;
+  }
+  .hero h1 {
+    font-size: 26px;
+    line-height: 1.2;
+  }
+  .hero p {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+  .landing-hero {
+    padding: 48px 20px 40px;
+  }
+  .landing-hero-badge {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  .landing-hero-title {
+    font-size: 28px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .landing-hero-sub {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+  .landing-hero-ctas {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .landing-cta-primary,
+  .landing-cta-secondary {
+    width: 100%;
+    text-align: center;
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+  .landing-hero-proof {
+    gap: 12px;
+    font-size: 13px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* SECTIONS */
+  .section {
+    padding: 32px 16px;
+  }
+  .section h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .landing-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* FORMS */
+  .auth-form input,
+  .auth-form textarea,
+  .auth-form select,
+  .wizard-page select,
+  .promo-inline-form input,
+  .promo-inline-form select,
+  .admin-search-form input,
+  .checkin-manual-form input {
+    min-height: 48px;
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding: 14px 16px;
+  }
+  .auth-form button,
+  .wizard-actions button,
+  .publish-actions button {
+    min-height: 50px;
+    font-size: 15px;
+  }
+
+  /* WIZARD */
+  .wizard-page {
+    padding: 20px 16px 60px;
+  }
+  .wizard-header h1 {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .wizard-step-label {
+    display: none;
+  }
+  .wizard-step-num {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+  .wizard-line {
+    margin-bottom: 12px;
+  }
+  .wizard-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  .wizard-actions button {
+    width: 100%;
+  }
+  .publish-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* FORM SECTIONS */
+  .form-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+  }
+  .form-section-title {
+    font-size: 14px;
+  }
+  .field-label {
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  .field-hint {
+    font-size: 12px;
+  }
+
+  /* CARDS */
+  .event-card-body {
+    padding: 14px;
+  }
+  .event-card-title {
+    font-size: 15px;
+  }
+
+  /* TICKET BLOCKS */
+  .ticket-block {
+    padding: 14px;
+  }
+  .ticket-block-header {
+    font-size: 13px;
+  }
+  .ticket-input-row {
+    padding: 12px;
+    padding-right: 28px;
+  }
+
+  /* AUTH PAGES */
+  .auth-page {
+    padding: 32px 16px 60px;
+  }
+  .auth-page h1 {
+    font-size: 24px;
+  }
+
+  /* CONTENT PAGES */
+  .content-page {
+    padding: 32px 16px 60px;
+  }
+  .content-page h1 {
+    font-size: 26px;
+    letter-spacing: -0.5px;
+  }
+  .content-lead {
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+
+  /* ACCOUNT PAGES */
+  .account-page {
+    padding: 24px 16px 60px;
+  }
+  .account-page h1 {
+    font-size: 22px;
+  }
+  .account-page > p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  /* DASHBOARD */
+  .dashboard-page {
+    padding: 24px 16px 60px;
+  }
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .dashboard-header h1 {
+    font-size: 24px;
+  }
+  .dashboard-create-btn {
+    text-align: center;
+    padding: 12px 18px;
+  }
+  .dash-tabs {
+    margin-bottom: 16px;
+  }
+  .dash-tab {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .dashboard-row {
+    padding: 12px;
+    gap: 12px;
+  }
+  .dashboard-row-img {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    font-size: 22px;
+  }
+  .dashboard-row-title {
+    font-size: 14px;
+  }
+  .dashboard-row-meta {
+    font-size: 12px;
+  }
+  .dashboard-row-stats {
+    gap: 10px;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  .dashboard-row-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .dash-btn {
+    padding: 10px 8px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  /* ANALYTICS */
+  .analytics-page {
+    padding: 20px 16px 60px;
+  }
+  .analytics-header h1 {
+    font-size: 22px;
+  }
+  .analytics-summary {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .analytics-card {
+    padding: 14px;
+  }
+  .analytics-card-value {
+    font-size: 18px;
+  }
+  .analytics-section {
+    margin-bottom: 28px;
+  }
+  .analytics-section h2 {
+    font-size: 17px;
+  }
+  .analytics-order-row {
+    padding: 12px 14px;
+  }
+  .analytics-order-email {
+    font-size: 13px;
+  }
+  .analytics-order-amount {
+    font-size: 14px;
+  }
+
+  /* CHECKOUT */
+  .checkout-card {
+    padding: 16px;
+  }
+  .checkout-summary {
+    padding: 16px;
+  }
+  .checkout-pay-btn {
+    padding: 16px;
+    font-size: 16px;
+  }
+  .quantity-controls button {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  /* PROMO */
+  .promo-checkout-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .promo-apply-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  /* MODAL */
+  .modal-backdrop {
+    padding: 12px;
+    align-items: flex-end;
+  }
+  .modal-card {
+    padding: 24px;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+  }
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  /* ORGANIZER PAGE */
+  .organizer-page {
+    padding: 24px 16px 60px;
+  }
+  .organizer-avatar {
+    width: 90px;
+    height: 90px;
+    font-size: 34px;
+  }
+  .organizer-name {
+    font-size: 24px;
+  }
+  .organizer-about {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .organizer-social {
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+
+  /* EVENT PAGE */
+  .event-detail {
+    padding: 0 16px;
+  }
+  .event-hero-img {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+    border-radius: 0;
+    height: 260px;
+  }
+  .event-info {
+    padding: 20px 0;
+  }
+  .event-info h1 {
+    font-size: 24px;
+  }
+  .event-title-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .event-title-row h1 {
+    font-size: 24px;
+  }
+  .share-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+  }
+  .ticket-row {
+    padding: 16px;
+    gap: 12px;
+  }
+  .ticket-name {
+    font-size: 15px;
+  }
+  .ticket-price {
+    font-size: 15px;
+  }
+  .ticket-buy {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  /* NOTIFICATIONS */
+  .notif-dropdown {
+    right: -8px;
+    width: calc(100vw - 32px);
+    max-width: 340px;
+  }
+  .notif-item {
+    padding: 14px;
+  }
+  .notif-title {
+    font-size: 14px;
+  }
+
+  /* ADMIN */
+  .admin-page {
+    padding: 24px 16px 60px;
+  }
+  .admin-header h1 {
+    font-size: 26px;
+  }
+  .admin-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .admin-stat {
+    padding: 14px;
+  }
+  .admin-stat-value {
+    font-size: 18px;
+  }
+  .admin-approval-card {
+    padding: 14px;
+  }
+  .admin-approval-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .admin-btn-approve,
+  .admin-btn-reject {
+    padding: 14px 12px;
+    font-size: 14px;
+  }
+
+  /* FOOTER */
+  .footer {
+    padding: 24px 16px;
+  }
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 16px 0 32px;
+  }
+  .footer-links {
+    gap: 40px;
+  }
+
+  /* CHECK-IN */
+  .checkin-page {
+    padding: 16px 16px 60px;
+  }
+  .checkin-header h1 {
+    font-size: 22px;
+  }
+  .checkin-stats {
+    gap: 8px;
+  }
+  .checkin-stat-value {
+    font-size: 20px;
+  }
+  .checkin-scan-btn,
+  .checkin-stop-btn {
+    padding: 18px;
+    font-size: 16px;
+  }
+
+  /* LANDING SECTIONS */
+  .landing-how,
+  .landing-why,
+  .landing-testimonials,
+  .landing-faq {
+    padding: 48px 16px;
+  }
+  .landing-how-title,
+  .landing-why-title {
+    font-size: 22px;
+    margin-bottom: 28px;
+  }
+  .landing-steps,
+  .landing-features,
+  .landing-quotes {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .landing-step {
+    padding: 16px;
+  }
+  .landing-feature {
+    padding: 18px;
+  }
+  .landing-quote {
+    padding: 20px;
+  }
+  .landing-final-cta {
+    padding: 40px 16px 60px;
+  }
+  .landing-final-cta-inner {
+    padding: 36px 22px;
+    border-radius: 20px;
+  }
+  .landing-final-cta h2 {
+    font-size: 22px;
+  }
+}
