@@ -417,6 +417,7 @@ export default function EditEventPage() {
                 required
               />
 
+              <label className="field-label">Description</label>
               <div className="rte-wrap-with-counter">
                 <RichTextEditor
                   value={description}
@@ -624,9 +625,7 @@ export default function EditEventPage() {
                   >
                     <ThemePreview theme={t.id} />
 
-                    {theme === t.id && (
-                      <div className="theme-check">✓</div>
-                    )}
+                    {theme === t.id && <div className="theme-check">✓</div>}
 
                     <div className="theme-card-footer">
                       <div className="theme-name">{t.name}</div>
@@ -886,4 +885,4 @@ export default function EditEventPage() {
       <Footer />
     </>
   );
-      }
+  }
