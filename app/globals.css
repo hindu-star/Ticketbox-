@@ -3468,3 +3468,30 @@ a.blog-card { display: block; color: inherit; }
     font-size: 22px;
   }
 }
+/* EVENT ENDED BANNER */
+.event-ended-banner {
+  padding: 14px 18px;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 16px 0 24px;
+}
+.event-ended-banner strong {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+/* Ticket row adjustments for ended */
+.ticket-soldout-btn {
+  padding: 10px 20px;
+  background: #e2e8f0;
+  color: #94a3b8;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: not-allowed;
+  display: inline-block;
+}
