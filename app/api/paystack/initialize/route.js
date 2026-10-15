@@ -24,6 +24,27 @@ export async function POST(request) {
     if (ticketError || !ticket) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
+    
+// Check if event has ended
+const { data: eventData } = await supabase
+  .from('events')
+  .select('end_date, event_date, end_time')
+  .eq('id', eventId)
+  .single();
+
+if (eventData) {
+  const dateStr = eventData.end_date || eventData.event_date;
+  const endDT = eventData.end_time
+    ? new Date(`${dateStr}T${eventData.end_time}`)
+    : new Date(`${dateStr}T23:59:59`);
+
+  if (endDT < new Date()) {
+    return NextResponse.json(
+      { error: 'This event has ended.' },
+      { status: 400 }
+    );
+  }
+}
 
     if (ticket.capacity) {
       const sold = ticket.quantity_sold || 0;
