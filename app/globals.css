@@ -4416,3 +4416,7 @@ a.blog-card { display: block; color: inherit; }
     margin-bottom: 32px;
   }
 }
+.drawer-admin-link {
+  color: var(--blue) !important;
+  font-weight: 700 !important;
+}
