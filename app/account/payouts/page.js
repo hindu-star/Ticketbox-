@@ -9,6 +9,7 @@ import { supabase } from '../../../lib/supabase';
 import {
   getProfile,
   updatePayoutAccount,
+  updatePayoutAccountBusiness,
   getCurrentName,
   namesMatch,
 } from '../../../lib/profile';
@@ -24,15 +25,18 @@ export default function PayoutsPage() {
   const [success, setSuccess] = useState('');
 
   const [banks, setBanks] = useState([]);
+  const [isBusiness, setIsBusiness] = useState(false);
   const [selectedBankCode, setSelectedBankCode] = useState('');
   const [selectedBankName, setSelectedBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
   const [resolved, setResolved] = useState(false);
+  const [pendingReview, setPendingReview] = useState(false);
 
   const [existingAccountNumber, setExistingAccountNumber] = useState('');
   const [existingAccountName, setExistingAccountName] = useState('');
   const [existingBankName, setExistingBankName] = useState('');
+  const [existingAccountType, setExistingAccountType] = useState('personal');
 
   useEffect(() => {
     async function load() {
@@ -52,7 +56,16 @@ export default function PayoutsPage() {
           setExistingAccountNumber(profile.account_number || '');
           setExistingAccountName(profile.account_name || '');
           setExistingBankName(profile.bank_name || '');
+          setExistingAccountType(profile.account_type || 'personal');
+          setIsBusiness(profile.account_type === 'business');
+
           if (profile.account_number) setResolved(true);
+          if (
+            profile.account_type === 'business' &&
+            !profile.payout_verified
+          ) {
+            setPendingReview(true);
+          }
         }
       } catch (err) {
         setError(err.message || 'Failed to load profile');
@@ -154,17 +167,6 @@ export default function PayoutsPage() {
       return;
     }
 
-    // Check if the bank account name matches the user's current profile name
-    const currentName = await getCurrentName();
-    const { match, reason } = namesMatch(accountName, currentName);
-
-    if (!match) {
-      setError(
-        `Your bank account name doesn't match your profile name. ${reason} — Update your Personal profile to match, or contact support.`
-      );
-      return;
-    }
-
     setSaving(true);
 
     try {
@@ -174,36 +176,74 @@ export default function PayoutsPage() {
         return;
       }
 
-      await updatePayoutAccount(user.id, {
-        bank_code: selectedBankCode,
-        bank_name: selectedBankName,
-        account_number: accountNumber,
-        account_name: accountName,
-      });
+      if (isBusiness) {
+        // Business flow — skip name match, submit for review
+        await updatePayoutAccountBusiness(user.id, {
+          bank_code: selectedBankCode,
+          bank_name: selectedBankName,
+          account_number: accountNumber,
+          account_name: accountName,
+        });
 
-      // Create Paystack subaccount so funds can be split automatically
-      const subRes = await fetch('/api/paystack/subaccount', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
-      });
+        // Fire subaccount route — returns pending_review for business
+        await fetch('/api/paystack/subaccount', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        });
 
-      const subData = await subRes.json();
-
-      if (!subRes.ok) {
-        setError(
-          `Bank details saved, but Paystack setup failed: ${
-            subData.error || 'Unknown error'
-          }. Contact support.`
+        setExistingAccountNumber(accountNumber);
+        setExistingAccountName(accountName);
+        setExistingBankName(selectedBankName);
+        setExistingAccountType('business');
+        setPendingReview(true);
+        setSuccess(
+          'Business account submitted. We will verify and approve within 24 hours.'
         );
-        setSaving(false);
-        return;
-      }
+      } else {
+        // Personal flow — enforce bidirectional name match
+        const currentName = await getCurrentName();
+        const { match, reason } = namesMatch(accountName, currentName);
 
-      setExistingAccountNumber(accountNumber);
-      setExistingAccountName(accountName);
-      setExistingBankName(selectedBankName);
-      setSuccess('Payout account saved and verified.');
+        if (!match) {
+          setError(
+            `Your bank account name doesn't match your profile name. ${reason} — Update your Personal profile to match, or check the business box above.`
+          );
+          setSaving(false);
+          return;
+        }
+
+        await updatePayoutAccount(user.id, {
+          bank_code: selectedBankCode,
+          bank_name: selectedBankName,
+          account_number: accountNumber,
+          account_name: accountName,
+        });
+
+        const subRes = await fetch('/api/paystack/subaccount', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        });
+
+        const subData = await subRes.json();
+
+        if (!subRes.ok) {
+          setError(
+            `Bank details saved, but Paystack setup failed: ${
+              subData.error || 'Unknown error'
+            }. Contact support.`
+          );
+          setSaving(false);
+          return;
+        }
+
+        setExistingAccountNumber(accountNumber);
+        setExistingAccountName(accountName);
+        setExistingBankName(selectedBankName);
+        setExistingAccountType('personal');
+        setSuccess('Payout account saved and verified.');
+      }
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to save payout account');
@@ -229,10 +269,7 @@ export default function PayoutsPage() {
       <Navbar />
       <div className="account-page">
         <h1>Payout account</h1>
-        <p>
-          Add your bank account to receive payouts from ticket sales. The
-          account name must match your profile name.
-        </p>
+        <p>Add your bank account to receive payouts from ticket sales.</p>
 
         {existingAccountNumber && !success && (
           <div className="payout-current">
@@ -242,7 +279,16 @@ export default function PayoutsPage() {
             </div>
             <div className="payout-current-meta">
               {existingBankName} · ••••{existingAccountNumber.slice(-4)}
+              {existingAccountType === 'business' && ' · Business'}
             </div>
+          </div>
+        )}
+
+        {pendingReview && !success && (
+          <div className="payout-pending">
+            <strong>Pending review.</strong> This business account is awaiting
+            approval. We&apos;ll verify and activate within 24 hours. You&apos;ll
+            be notified by email.
           </div>
         )}
 
@@ -250,6 +296,23 @@ export default function PayoutsPage() {
         {success && <div className="auth-success">{success}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
+          <label className="business-checkbox">
+            <input
+              type="checkbox"
+              checked={isBusiness}
+              onChange={(e) => setIsBusiness(e.target.checked)}
+            />
+            <span>This is a business bank account</span>
+          </label>
+
+          {isBusiness && (
+            <p className="field-hint" style={{ marginTop: -8 }}>
+              Business accounts are manually verified. Please upload your CAC
+              registration to <strong>ticketboxhq@gmail.com</strong> after
+              submitting.
+            </p>
+          )}
+
           <label className="field-label">Bank</label>
           <select
             value={selectedBankCode}
@@ -302,23 +365,30 @@ export default function PayoutsPage() {
             </p>
           )}
 
-          <p className="field-hint" style={{ marginTop: 8 }}>
-            If your bank name doesn&apos;t match your profile name, update your{' '}
-            <Link
-              href="/account/personal"
-              style={{ color: 'var(--blue)', fontWeight: 600 }}
-            >
-              Personal profile
-            </Link>{' '}
-            first.
-          </p>
+          {!isBusiness && (
+            <p className="field-hint" style={{ marginTop: 8 }}>
+              If your bank name doesn&apos;t match your profile name, update
+              your{' '}
+              <Link
+                href="/account/personal"
+                style={{ color: 'var(--blue)', fontWeight: 600 }}
+              >
+                Personal profile
+              </Link>{' '}
+              first, or check the business box above.
+            </p>
+          )}
 
           <button type="submit" disabled={saving || !resolved}>
-            {saving ? 'Saving...' : 'Save payout account'}
+            {saving
+              ? 'Saving...'
+              : isBusiness
+              ? 'Submit for review'
+              : 'Save payout account'}
           </button>
         </form>
       </div>
       <Footer />
     </>
   );
-      }
+              }
