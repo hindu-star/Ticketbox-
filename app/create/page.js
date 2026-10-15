@@ -313,6 +313,7 @@ export default function CreatePage() {
                 required
               />
 
+              <label className="field-label">Description</label>
               <div className="rte-wrap-with-counter">
                 <RichTextEditor
                   value={description}
@@ -767,4 +768,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-          }
+}
