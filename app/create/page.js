@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import { supabase } from '../../lib/supabase';
 import { createEvent } from '../../lib/events';
+import { createPromoCodesForEvent } from '../../lib/promo';
 import { EVENT_FORMATS } from '../../lib/eventFormats';
 import { EVENT_CATEGORIES } from '../../lib/eventCategories';
 import { NIGERIA_STATES, NIGERIA_STATE_NAMES } from '../../lib/nigeriaStates';
@@ -25,6 +26,16 @@ function emptyTicket() {
     perks: [],
     is_invite_only: false,
     invite_password: '',
+  };
+}
+
+function emptyPromo() {
+  return {
+    code: '',
+    discount_type: 'percent',
+    discount_value: '',
+    max_uses: '',
+    expires_at: '',
   };
 }
 
@@ -57,6 +68,10 @@ export default function CreatePage() {
   const [theme, setTheme] = useState('classic');
 
   const [tickets, setTickets] = useState([emptyTicket()]);
+  const [promoCodes, setPromoCodes] = useState([]);
+  const [showPromoForm, setShowPromoForm] = useState(false);
+  const [promoDraft, setPromoDraft] = useState(emptyPromo());
+  const [promoError, setPromoError] = useState('');
 
   const [submitting, setSubmitting] = useState(null);
   const [error, setError] = useState('');
@@ -115,6 +130,54 @@ export default function CreatePage() {
     setTickets(updated);
   }
 
+  // === PROMO HANDLERS ===
+  function addPromoCode() {
+    setPromoError('');
+    const clean = promoDraft.code.toUpperCase().trim().replace(/\s+/g, '');
+    if (clean.length < 3) {
+      setPromoError('Code must be at least 3 characters');
+      return;
+    }
+    if (promoCodes.some((c) => c.code === clean)) {
+      setPromoError('That code already exists');
+      return;
+    }
+    const value = Number(promoDraft.discount_value);
+    if (!value || value <= 0) {
+      setPromoError('Enter a valid discount value');
+      return;
+    }
+    if (promoDraft.discount_type === 'percent' && value > 100) {
+      setPromoError('Percent cannot exceed 100');
+      return;
+    }
+
+    const newCode = {
+      code: clean,
+      discount_type: promoDraft.discount_type,
+      discount_value: value,
+      max_uses: promoDraft.max_uses ? Number(promoDraft.max_uses) : null,
+      expires_at: promoDraft.expires_at
+        ? new Date(promoDraft.expires_at).toISOString()
+        : null,
+    };
+
+    setPromoCodes([...promoCodes, newCode]);
+    setPromoDraft(emptyPromo());
+    setShowPromoForm(false);
+    setPromoError('');
+  }
+
+  function removePromoCode(index) {
+    setPromoCodes(promoCodes.filter((_, i) => i !== index));
+  }
+
+  function formatPromoDiscount(p) {
+    if (p.discount_type === 'percent') return `${p.discount_value}% off`;
+    return `₦${Number(p.discount_value).toLocaleString()} off`;
+  }
+
+  // === STEP VALIDATION ===
   function validateStep1() {
     if (!title.trim()) return 'Event name is required';
 
@@ -260,6 +323,16 @@ export default function CreatePage() {
           invite_password: t.is_invite_only ? t.invite_password : null,
         }))
       );
+
+      // Save promo codes now that event exists
+      if (promoCodes.length > 0) {
+        try {
+          await createPromoCodesForEvent(newEvent.id, user.id, promoCodes);
+        } catch (promoErr) {
+          console.error('Promo save error:', promoErr);
+          // non-fatal — event still created
+        }
+      }
 
       if (mode === 'draft') {
         router.push('/my-events');
@@ -736,6 +809,178 @@ export default function CreatePage() {
               ))}
             </div>
 
+            {/* PROMO CODES SECTION */}
+            <div className="form-section promo-inline-section">
+              <div className="tickets-header">
+                <div>
+                  <h3>Promo codes</h3>
+                  <p className="promo-inline-hint">
+                    Optional — let buyers enter a code at checkout for a
+                    discount.
+                  </p>
+                </div>
+                {!showPromoForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPromoForm(true)}
+                    className="add-ticket-btn"
+                  >
+                    + Add code
+                  </button>
+                )}
+              </div>
+
+              {showPromoForm && (
+                <div className="promo-inline-form">
+                  {promoError && (
+                    <div className="auth-error">{promoError}</div>
+                  )}
+
+                  <input
+                    type="text"
+                    placeholder="e.g. EARLYBIRD"
+                    value={promoDraft.code}
+                    onChange={(e) =>
+                      setPromoDraft({
+                        ...promoDraft,
+                        code: e.target.value
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, '')
+                          .slice(0, 20),
+                      })
+                    }
+                  />
+
+                  <div className="promo-row">
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">Type</label>
+                      <select
+                        value={promoDraft.discount_type}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            discount_type: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="percent">Percent off</option>
+                        <option value="fixed">Fixed amount off</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">
+                        {promoDraft.discount_type === 'percent'
+                          ? 'Percent'
+                          : 'Amount (₦)'}
+                      </label>
+                      <input
+                        type="number"
+                        placeholder={
+                          promoDraft.discount_type === 'percent'
+                            ? 'e.g. 20'
+                            : 'e.g. 1000'
+                        }
+                        value={promoDraft.discount_value}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            discount_value: e.target.value,
+                          })
+                        }
+                        min="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="promo-row">
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">
+                        Max uses (optional)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Unlimited"
+                        value={promoDraft.max_uses}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            max_uses: e.target.value,
+                          })
+                        }
+                        min="1"
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">
+                        Expires (optional)
+                      </label>
+                      <input
+                        type="date"
+                        value={promoDraft.expires_at}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            expires_at: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="promo-form-actions">
+                    <button
+                      type="button"
+                      className="promo-cancel-btn"
+                      onClick={() => {
+                        setShowPromoForm(false);
+                        setPromoDraft(emptyPromo());
+                        setPromoError('');
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="promo-save-btn"
+                      onClick={addPromoCode}
+                    >
+                      Save code
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {promoCodes.length > 0 && (
+                <div className="promo-list">
+                  {promoCodes.map((c, i) => (
+                    <div key={i} className="promo-row-item">
+                      <div className="promo-row-left">
+                        <div className="promo-code-label">{c.code}</div>
+                        <div className="promo-code-meta">
+                          {formatPromoDiscount(c)}
+                          {c.max_uses ? ` · Max ${c.max_uses} uses` : ''}
+                          {c.expires_at ? ' · Has expiry' : ''}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="promo-delete-btn"
+                        onClick={() => removePromoCode(i)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {promoCodes.length === 0 && !showPromoForm && (
+                <p className="promo-inline-hint" style={{ marginTop: 4 }}>
+                  No promo codes yet.
+                </p>
+              )}
+            </div>
+
             <div className="publish-actions">
               <button
                 type="button"
@@ -768,4 +1013,4 @@ export default function CreatePage() {
       <Footer />
     </>
   );
-}
+    }
