@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendTicketEmail } from '../../../../lib/email';
 import { createTicketsForOrder } from '../../../../lib/events';
+import { createNotification } from '../../../../lib/notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -39,10 +40,10 @@ export async function POST(request) {
       );
     }
 
-    // Block if event has ended
+    // Block if event has ended + get organizer info in one query
     const { data: eventData } = await supabase
       .from('events')
-      .select('end_date, event_date, end_time')
+      .select('title, organizer_id, end_date, event_date, end_time')
       .eq('id', eventId)
       .single();
 
@@ -116,12 +117,6 @@ export async function POST(request) {
         .eq('order_id', order.id)
         .order('ticket_number', { ascending: true });
       ticketIds = (created || []).map((t) => t.id);
-      console.log(
-        'Created',
-        ticketIds.length,
-        'tickets for order',
-        order.id
-      );
     } catch (ticketErr) {
       console.error('Ticket creation error:', ticketErr);
     }
@@ -153,8 +148,24 @@ export async function POST(request) {
       .update({ quantity_sold: newSold })
       .eq('id', ticket.id);
 
+    // Notify organizer
+    if (eventData?.organizer_id) {
+      try {
+        await createNotification({
+          userId: eventData.organizer_id,
+          type: 'ticket_sold',
+          title: `🎟️ ${quantity} ticket${quantity === 1 ? '' : 's'} claimed for ${eventData.title}`,
+          body: `${buyerEmail} just claimed ${quantity} free ticket${
+            quantity === 1 ? '' : 's'
+          }.`,
+          link: `/event/${eventId}/analytics`,
+        });
+      } catch (notifErr) {
+        console.error('Notification error:', notifErr);
+      }
+    }
+
     // Send ticket email
-    console.log('About to send free ticket email. Order:', reference);
     try {
       const { data: event } = await supabase
         .from('events')
@@ -163,7 +174,6 @@ export async function POST(request) {
         .single();
 
       if (event && ticket) {
-        console.log('Calling sendTicketEmail for:', buyerEmail);
         const emailResult = await sendTicketEmail({
           to: buyerEmail,
           name: buyerEmail.split('@')[0],
@@ -174,17 +184,13 @@ export async function POST(request) {
           total: 0,
           ticketIds,
         });
-        console.log(
-          'Free ticket email result:',
-          JSON.stringify(emailResult)
-        );
+        console.log('Free ticket email result:', JSON.stringify(emailResult));
       }
     } catch (emailErr) {
       console.error(
         'FREE TICKET EMAIL FAILED:',
         emailErr.message || emailErr
       );
-      console.error('Full error:', JSON.stringify(emailErr, null, 2));
     }
 
     return NextResponse.json({ reference, success: true });
