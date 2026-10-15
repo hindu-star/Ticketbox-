@@ -5,12 +5,18 @@ import { createTicketsForOrder } from '../../../../lib/events';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export async function POST(request) {
   try {
-    const { eventId, ticketId, quantity, buyerEmail } = await request.json();
+    const {
+      eventId,
+      ticketId,
+      quantity,
+      buyerEmail,
+      promoCodeId,
+    } = await request.json();
 
     if (!eventId || !ticketId || !quantity || !buyerEmail) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -32,28 +38,29 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    
-// Check if event has ended
-const { data: eventData } = await supabase
-  .from('events')
-  .select('end_date, event_date, end_time')
-  .eq('id', eventId)
-  .single();
 
-if (eventData) {
-  const dateStr = eventData.end_date || eventData.event_date;
-  const endDT = eventData.end_time
-    ? new Date(`${dateStr}T${eventData.end_time}`)
-    : new Date(`${dateStr}T23:59:59`);
+    // Block if event has ended
+    const { data: eventData } = await supabase
+      .from('events')
+      .select('end_date, event_date, end_time')
+      .eq('id', eventId)
+      .single();
 
-  if (endDT < new Date()) {
-    return NextResponse.json(
-      { error: 'This event has ended.' },
-      { status: 400 }
-    );
-  }
-}
+    if (eventData) {
+      const dateStr = eventData.end_date || eventData.event_date;
+      const endDT = eventData.end_time
+        ? new Date(`${dateStr}T${eventData.end_time}`)
+        : new Date(`${dateStr}T23:59:59`);
 
+      if (endDT < new Date()) {
+        return NextResponse.json(
+          { error: 'This event has ended.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Capacity check
     if (ticket.capacity) {
       const sold = ticket.quantity_sold || 0;
       const remaining = ticket.capacity - sold;
@@ -69,7 +76,10 @@ if (eventData) {
       }
     }
 
-    const reference = `TB-FREE-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const reference = `TB-FREE-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()}`;
 
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -85,6 +95,7 @@ if (eventData) {
           total: 0,
           paystack_reference: reference,
           status: 'paid',
+          promo_code_id: promoCodeId || null,
         },
       ])
       .select()
@@ -105,12 +116,37 @@ if (eventData) {
         .eq('order_id', order.id)
         .order('ticket_number', { ascending: true });
       ticketIds = (created || []).map((t) => t.id);
-      console.log('Created', ticketIds.length, 'tickets for order', order.id);
+      console.log(
+        'Created',
+        ticketIds.length,
+        'tickets for order',
+        order.id
+      );
     } catch (ticketErr) {
       console.error('Ticket creation error:', ticketErr);
-      // continue anyway — order is created
     }
 
+    // Increment promo usage if applied
+    if (promoCodeId) {
+      try {
+        const { data: promoRow } = await supabase
+          .from('promo_codes')
+          .select('times_used')
+          .eq('id', promoCodeId)
+          .single();
+
+        if (promoRow) {
+          await supabase
+            .from('promo_codes')
+            .update({ times_used: (promoRow.times_used || 0) + 1 })
+            .eq('id', promoCodeId);
+        }
+      } catch (promoErr) {
+        console.error('Promo increment error:', promoErr);
+      }
+    }
+
+    // Increment sold count
     const newSold = (ticket.quantity_sold || 0) + quantity;
     await supabase
       .from('ticket_types')
@@ -138,10 +174,16 @@ if (eventData) {
           total: 0,
           ticketIds,
         });
-        console.log('Free ticket email result:', JSON.stringify(emailResult));
+        console.log(
+          'Free ticket email result:',
+          JSON.stringify(emailResult)
+        );
       }
     } catch (emailErr) {
-      console.error('FREE TICKET EMAIL FAILED:', emailErr.message || emailErr);
+      console.error(
+        'FREE TICKET EMAIL FAILED:',
+        emailErr.message || emailErr
+      );
       console.error('Full error:', JSON.stringify(emailErr, null, 2));
     }
 
