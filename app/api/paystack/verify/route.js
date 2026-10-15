@@ -47,7 +47,8 @@ export async function GET(request) {
         .eq('paystack_reference', reference)
         .single();
 
-      const isNewlyPaid = existingOrder && existingOrder.status !== 'paid';
+      const isNewlyPaid =
+        existingOrder && existingOrder.status !== 'paid';
 
       const { data: updatedOrder } = await supabase
         .from('orders')
@@ -68,7 +69,8 @@ export async function GET(request) {
           .single();
 
         if (ticket) {
-          const newSold = (ticket.quantity_sold || 0) + existingOrder.quantity;
+          const newSold =
+            (ticket.quantity_sold || 0) + existingOrder.quantity;
           await supabase
             .from('ticket_types')
             .update({ quantity_sold: newSold })
@@ -91,6 +93,32 @@ export async function GET(request) {
         } catch (ticketErr) {
           console.error('Ticket creation error:', ticketErr);
         }
+
+        // Increment promo code usage
+        if (existingOrder.promo_code_id) {
+          try {
+            const { data: promoRow } = await supabase
+              .from('promo_codes')
+              .select('times_used')
+              .eq('id', existingOrder.promo_code_id)
+              .single();
+
+            if (promoRow) {
+              await supabase
+                .from('promo_codes')
+                .update({
+                  times_used: (promoRow.times_used || 0) + 1,
+                })
+                .eq('id', existingOrder.promo_code_id);
+              console.log(
+                'Incremented promo code:',
+                existingOrder.promo_code_id
+              );
+            }
+          } catch (promoErr) {
+            console.error('Promo increment error:', promoErr);
+          }
+        }
       }
     }
 
@@ -109,7 +137,7 @@ export async function GET(request) {
           .eq('id', order.ticket_type_id)
           .single();
 
-        // Get the individual tickets we just created
+        // Get individual tickets
         const { data: ticketRows } = await supabase
           .from('tickets')
           .select('id')
@@ -139,7 +167,11 @@ export async function GET(request) {
 
     return NextResponse.json({
       order: order || null,
-      paystack: { amount: 0, reference, paid_at: new Date().toISOString() },
+      paystack: {
+        amount: 0,
+        reference,
+        paid_at: new Date().toISOString(),
+      },
     });
   } catch (err) {
     console.error('Verify error:', err);
