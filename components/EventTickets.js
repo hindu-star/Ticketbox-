@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import InviteUnlocker from './InviteUnlocker';
 
-export default function EventTickets({ eventId, tickets }) {
+export default function EventTickets({ eventId, tickets, ended }) {
   const [unlockedIds, setUnlockedIds] = useState([]);
 
   const publicTickets = tickets.filter((t) => !t.is_invite_only);
@@ -33,7 +33,8 @@ export default function EventTickets({ eventId, tickets }) {
               ? t.capacity - (t.quantity_sold || 0)
               : null;
             const soldOut = remaining !== null && remaining <= 0;
-            const isFree = t.ticket_kind === 'free' || Number(t.price) === 0;
+            const isFree =
+              t.ticket_kind === 'free' || Number(t.price) === 0;
             const perks = Array.isArray(t.perks) ? t.perks : [];
 
             return (
@@ -58,7 +59,11 @@ export default function EventTickets({ eventId, tickets }) {
                   )}
 
                   {t.capacity && (
-                    <div className={`ticket-remaining ${soldOut ? 'sold-out' : ''}`}>
+                    <div
+                      className={`ticket-remaining ${
+                        soldOut ? 'sold-out' : ''
+                      }`}
+                    >
                       {soldOut
                         ? 'Sold out'
                         : `${remaining} of ${t.capacity} remaining`}
@@ -72,9 +77,13 @@ export default function EventTickets({ eventId, tickets }) {
                 </div>
                 <div className="ticket-right">
                   <div className="ticket-price">
-                    {isFree ? 'Free' : `₦${Number(t.price).toLocaleString()}`}
+                    {isFree
+                      ? 'Free'
+                      : `₦${Number(t.price).toLocaleString()}`}
                   </div>
-                  {soldOut ? (
+                  {ended ? (
+                    <span className="ticket-soldout-btn">Ended</span>
+                  ) : soldOut ? (
                     <span className="ticket-soldout-btn">Sold out</span>
                   ) : (
                     <Link
@@ -91,9 +100,12 @@ export default function EventTickets({ eventId, tickets }) {
         </div>
       )}
 
-      {inviteTickets.length > 0 && (
-        <InviteUnlocker inviteTickets={inviteTickets} onUnlock={handleUnlock} />
+      {!ended && inviteTickets.length > 0 && (
+        <InviteUnlocker
+          inviteTickets={inviteTickets}
+          onUnlock={handleUnlock}
+        />
       )}
     </>
   );
-    }
+                    }
