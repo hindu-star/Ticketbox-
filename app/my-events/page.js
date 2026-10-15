@@ -268,14 +268,6 @@ export default function MyEventsPage() {
                         Check-in
                       </Link>
                     )}
-                    {!isDraft && (
-                      <Link
-                        href={`/my-events/promo/${e.id}`}
-                        className="dash-btn"
-                      >
-                        Promo
-                      </Link>
-                    )}
                     {isDraft ? (
                       <button
                         onClick={() => handlePublish(e.id)}
@@ -310,4 +302,4 @@ export default function MyEventsPage() {
       <Footer />
     </>
   );
-          }
+}
