@@ -3822,3 +3822,108 @@ a.blog-card { display: block; color: inherit; }
 .promo-save-btn:hover {
   background: var(--blue-dark);
 }
+/* PROMO CODE INPUT (checkout) */
+.promo-checkout-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.promo-checkout-row input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.promo-checkout-row input:focus {
+  border-color: var(--blue);
+}
+.promo-apply-btn {
+  padding: 12px 20px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.promo-apply-btn:hover:not(:disabled) {
+  background: var(--blue-dark);
+}
+.promo-apply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.promo-error-text {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+/* PROMO APPLIED STATE */
+.promo-applied-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  margin-top: 8px;
+}
+.promo-applied-label {
+  font-size: 14px;
+  color: #14532d;
+  margin-bottom: 2px;
+}
+.promo-applied-label strong {
+  font-family: monospace;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.promo-applied-meta {
+  font-size: 13px;
+  color: #166534;
+}
+.promo-remove-btn {
+  padding: 6px 12px;
+  background: #fff;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.promo-remove-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+/* SUMMARY DISCOUNT ROW */
+.summary-discount {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+@media (max-width: 500px) {
+  .promo-checkout-row {
+    flex-direction: column;
+  }
+  .promo-apply-btn {
+    width: 100%;
+  }
+}
