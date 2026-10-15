@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../lib/supabase';
 import { signOut } from '../lib/auth';
+import NotificationBell from './NotificationBell';
 
 const AVATAR_COLORS = [
   '#f97316', '#2563eb', '#16a34a', '#dc2626',
@@ -76,6 +77,7 @@ export default function Navbar() {
         </Link>
         {loading ? null : user ? (
           <>
+            <NotificationBell />
             <div
               className="navbar-avatar"
               style={{ background: avatarColor }}
@@ -95,8 +97,9 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Mobile: avatar + hamburger */}
+      {/* Mobile: bell + avatar + hamburger */}
       <div className="navbar-mobile">
+        {!loading && user && <NotificationBell />}
         {!loading && user && (
           <div
             className="navbar-avatar"
@@ -174,4 +177,4 @@ export default function Navbar() {
       )}
     </nav>
   );
-}
+          }
