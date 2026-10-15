@@ -4086,3 +4086,333 @@ a.blog-card { display: block; color: inherit; }
     width: 300px;
   }
 }
+/* ADMIN PAGE */
+.admin-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+.admin-header {
+  margin-bottom: 40px;
+}
+.admin-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+  color: var(--black);
+}
+.admin-header p {
+  font-size: 14px;
+  color: var(--gray-500);
+}
+
+.admin-section {
+  margin-bottom: 48px;
+}
+.admin-section-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin-bottom: 16px;
+  color: var(--black);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-count-badge {
+  background: #dc2626;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* STATS GRID */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.admin-stat {
+  padding: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  background: #fff;
+}
+.admin-stat-highlight {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.admin-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+.admin-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--black);
+  letter-spacing: -0.5px;
+}
+.admin-stat-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+/* EMPTY STATE */
+.admin-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 14px;
+  background: var(--gray-50);
+  border-radius: 12px;
+  border: 1px dashed var(--gray-200);
+}
+
+/* APPROVALS */
+.admin-approval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.admin-approval-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 14px;
+  padding: 18px;
+  background: #fff;
+}
+.admin-approval-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.admin-approval-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 2px;
+}
+.admin-approval-email {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+.admin-approval-time {
+  font-size: 12px;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+.admin-approval-details {
+  padding: 12px 14px;
+  background: var(--gray-50);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+.admin-detail-label {
+  font-weight: 600;
+  color: var(--gray-500);
+  font-size: 13px;
+}
+.admin-approval-note {
+  font-size: 12px;
+  color: #78350f;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.admin-approval-actions {
+  display: flex;
+  gap: 8px;
+}
+.admin-btn-approve,
+.admin-btn-reject {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+}
+.admin-btn-approve {
+  background: #16a34a;
+  color: #fff;
+}
+.admin-btn-approve:hover:not(:disabled) {
+  background: #15803d;
+}
+.admin-btn-reject {
+  background: #fff;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.admin-btn-reject:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+.admin-btn-approve:disabled,
+.admin-btn-reject:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* RECENT ORDERS TABLE */
+.admin-table {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.admin-table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  gap: 12px;
+}
+.admin-table-row:last-child {
+  border-bottom: none;
+}
+.admin-table-left {
+  flex: 1;
+  min-width: 0;
+}
+.admin-table-primary {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-table-secondary {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+.admin-table-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.admin-table-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 2px;
+}
+.admin-table-status {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.status-paid {
+  background: #dcfce7;
+  color: #166534;
+}
+.status-pending {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+/* USER SEARCH */
+.admin-search-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.admin-search-form input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+}
+.admin-search-form input:focus {
+  border-color: var(--blue);
+}
+.admin-search-form button {
+  padding: 12px 22px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.admin-search-form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.admin-user-result {
+  padding: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.admin-user-events {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-user-event {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--gray-700);
+}
+.admin-user-event-status {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+}
+
+@media (max-width: 800px) {
+  .admin-page {
+    padding: 24px 16px 60px;
+  }
+  .admin-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-section {
+    margin-bottom: 32px;
+  }
+}
