@@ -38,9 +38,11 @@ export default function Navbar() {
       setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      }
+    );
 
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -53,7 +55,9 @@ export default function Navbar() {
   }
 
   const initial = user?.email ? user.email[0].toUpperCase() : '';
-  const avatarColor = user?.email ? getAvatarColor(user.email) : '#333';
+  const avatarColor = user?.email
+    ? getAvatarColor(user.email)
+    : '#333';
 
   return (
     <nav className="navbar">
@@ -64,8 +68,12 @@ export default function Navbar() {
       {/* Desktop links */}
       <div className="navbar-links navbar-desktop">
         <Link href="/browse">Browse</Link>
-        {!loading && user && <Link href="/my-events">My Events</Link>}
-        <Link href="/create" className="navbar-cta">+ Create</Link>
+        {!loading && user && (
+          <Link href="/my-events">My Events</Link>
+        )}
+        <Link href="/create" className="navbar-cta">
+          + Create
+        </Link>
         {loading ? null : user ? (
           <>
             <div
@@ -75,7 +83,12 @@ export default function Navbar() {
             >
               {initial}
             </div>
-            <button onClick={handleLogout} className="navbar-logout">Log out</button>
+            <button
+              onClick={handleLogout}
+              className="navbar-logout"
+            >
+              Log out
+            </button>
           </>
         ) : (
           <Link href="/login">Login</Link>
@@ -107,6 +120,8 @@ export default function Navbar() {
       {/* Mobile menu drawer */}
       {menuOpen && (
         <div className="navbar-drawer">
+          <Link href="/">Home</Link>
+
           {loading ? null : user ? (
             <>
               <Link href="/browse">Browse</Link>
@@ -114,11 +129,19 @@ export default function Navbar() {
 
               <button
                 type="button"
-                className={`drawer-account-toggle ${accountOpen ? 'open' : ''}`}
+                className={`drawer-account-toggle ${
+                  accountOpen ? 'open' : ''
+                }`}
                 onClick={() => setAccountOpen(!accountOpen)}
               >
                 <span>Account</span>
-                <span className={`drawer-chevron ${accountOpen ? 'open' : ''}`}>›</span>
+                <span
+                  className={`drawer-chevron ${
+                    accountOpen ? 'open' : ''
+                  }`}
+                >
+                  ›
+                </span>
               </button>
 
               {accountOpen && (
@@ -133,7 +156,10 @@ export default function Navbar() {
               <Link href="/create">+ Create event</Link>
               <Link href="/how-to-get-paid">How to get paid</Link>
               <Link href="/contact">Help</Link>
-              <button onClick={handleLogout} className="drawer-logout">
+              <button
+                onClick={handleLogout}
+                className="drawer-logout"
+              >
                 Sign out
               </button>
             </>
@@ -148,4 +174,4 @@ export default function Navbar() {
       )}
     </nav>
   );
-            }
+}
