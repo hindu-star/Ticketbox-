@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendAdminBusinessAlert } from '../../../../lib/email';
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API = 'https://api.paystack.co';
@@ -16,7 +17,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
-    // Fetch the profile to get bank details
+    // Fetch the profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -38,7 +39,42 @@ export async function POST(request) {
       );
     }
 
-    // If a subaccount already exists, skip creation
+    // Business account — needs manual review, don't create subaccount yet
+    if (profile.account_type === 'business' && !profile.payout_verified) {
+      // Send admin alert (fire-and-forget)
+      try {
+        // Get the organizer's email from auth.users
+        const { data: authUser } = await supabase.auth.admin.getUserById(
+          userId
+        );
+
+        await sendAdminBusinessAlert({
+          organizerName:
+            profile.display_name ||
+            [profile.first_name, profile.last_name]
+              .filter(Boolean)
+              .join(' '),
+          organizerEmail: authUser?.user?.email || '—',
+          businessName: profile.display_name || '—',
+          bankName: profile.bank_name,
+          accountNumber: profile.account_number,
+          accountName: profile.account_name,
+          userId,
+        });
+      } catch (emailErr) {
+        console.error('Admin alert email failed:', emailErr);
+        // continue anyway
+      }
+
+      return NextResponse.json({
+        success: false,
+        pending_review: true,
+        message:
+          'Business account submitted. We will verify and approve within 24 hours.',
+      });
+    }
+
+    // If subaccount already exists, skip
     if (profile.paystack_subaccount_code) {
       return NextResponse.json({
         subaccount_code: profile.paystack_subaccount_code,
@@ -46,18 +82,17 @@ export async function POST(request) {
       });
     }
 
-    // Determine the display name for Paystack
+    // Build subaccount payload
     const businessName =
       profile.display_name ||
       [profile.first_name, profile.last_name].filter(Boolean).join(' ') ||
       profile.account_name;
 
-    // Create the subaccount
     const body = {
       business_name: businessName,
       settlement_bank: profile.bank_code,
       account_number: profile.account_number,
-      percentage_charge: 5, // platform keeps 5%, organizer gets 95%
+      percentage_charge: 5,
       description: 'TicketBox organizer',
       primary_contact_name: profile.account_name,
     };
@@ -83,7 +118,6 @@ export async function POST(request) {
 
     const subaccountCode = data.data.subaccount_code;
 
-    // Save it to the profile
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
