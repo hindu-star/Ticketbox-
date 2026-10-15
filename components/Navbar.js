@@ -125,7 +125,7 @@ export default function Navbar() {
         <div className="navbar-drawer">
   {!loading && user?.id === '4747975a-50f4-4329-94ef-80672e5ecd31' && (
     <Link href="/admin" className="drawer-admin-link">
-      ⚙️ Admin
+       Admin
     </Link>
   )}
   <Link href="/">Home</Link>
