@@ -3751,3 +3751,74 @@ a.blog-card { display: block; color: inherit; }
     gap: 8px;
   }
 }
+/* PROMO INLINE SECTION */
+.promo-inline-section {
+  padding: 20px;
+  border: 1px dashed var(--gray-200);
+  border-radius: 14px;
+  background: #fff;
+  margin-bottom: 24px;
+}
+.promo-inline-hint {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-top: 4px;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+.promo-inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.promo-inline-form input,
+.promo-inline-form select {
+  padding: 12px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  width: 100%;
+}
+.promo-inline-form input:focus,
+.promo-inline-form select:focus {
+  border-color: var(--blue);
+}
+.promo-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.promo-cancel-btn,
+.promo-save-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+.promo-cancel-btn {
+  background: #fff;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+.promo-cancel-btn:hover {
+  border-color: var(--gray-500);
+}
+.promo-save-btn {
+  background: var(--blue);
+  color: #fff;
+}
+.promo-save-btn:hover {
+  background: var(--blue-dark);
+}
