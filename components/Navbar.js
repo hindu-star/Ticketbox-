@@ -123,7 +123,12 @@ export default function Navbar() {
       {/* Mobile menu drawer */}
       {menuOpen && (
         <div className="navbar-drawer">
-          <Link href="/">Home</Link>
+  {!loading && user?.id === '4747975a-50f4-4329-94ef-80672e5ecd31' && (
+    <Link href="/admin" className="drawer-admin-link">
+      ⚙️ Admin
+    </Link>
+  )}
+  <Link href="/">Home</Link>
 
           {loading ? null : user ? (
             <>
