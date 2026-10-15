@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyTransaction } from '../../../../lib/paystack';
 import { sendTicketEmail } from '../../../../lib/email';
 import { createTicketsForOrder } from '../../../../lib/events';
+import { createNotification } from '../../../../lib/notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -18,13 +19,10 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Missing reference' }, { status: 400 });
     }
 
-    console.log('Verify called with reference:', reference);
-
     let order = null;
     let shouldSendEmail = false;
 
     if (reference.startsWith('TB-FREE-')) {
-      // Free flow handled elsewhere — just look up
       const { data } = await supabase
         .from('orders')
         .select('*')
@@ -84,17 +82,11 @@ export async function GET(request) {
             existingOrder.event_id,
             existingOrder.quantity
           );
-          console.log(
-            'Created',
-            existingOrder.quantity,
-            'tickets for order',
-            existingOrder.id
-          );
         } catch (ticketErr) {
           console.error('Ticket creation error:', ticketErr);
         }
 
-        // Increment promo code usage
+        // Increment promo usage
         if (existingOrder.promo_code_id) {
           try {
             const { data: promoRow } = await supabase
@@ -110,14 +102,35 @@ export async function GET(request) {
                   times_used: (promoRow.times_used || 0) + 1,
                 })
                 .eq('id', existingOrder.promo_code_id);
-              console.log(
-                'Incremented promo code:',
-                existingOrder.promo_code_id
-              );
             }
           } catch (promoErr) {
             console.error('Promo increment error:', promoErr);
           }
+        }
+
+        // Notify organizer
+        try {
+          const { data: ev } = await supabase
+            .from('events')
+            .select('title, organizer_id')
+            .eq('id', existingOrder.event_id)
+            .single();
+
+          if (ev?.organizer_id) {
+            await createNotification({
+              userId: ev.organizer_id,
+              type: 'ticket_sold',
+              title: `🎟️ ${existingOrder.quantity} ticket${
+                existingOrder.quantity === 1 ? '' : 's'
+              } sold for ${ev.title}`,
+              body: `${existingOrder.buyer_email} paid ₦${Number(
+                existingOrder.total || 0
+              ).toLocaleString()}.`,
+              link: `/event/${existingOrder.event_id}/analytics`,
+            });
+          }
+        } catch (notifErr) {
+          console.error('Notification error:', notifErr);
         }
       }
     }
@@ -137,7 +150,6 @@ export async function GET(request) {
           .eq('id', order.ticket_type_id)
           .single();
 
-        // Get individual tickets
         const { data: ticketRows } = await supabase
           .from('tickets')
           .select('id')
@@ -147,8 +159,7 @@ export async function GET(request) {
         const ticketIds = (ticketRows || []).map((t) => t.id);
 
         if (event && ticket) {
-          console.log('Calling sendTicketEmail for:', order.buyer_email);
-          const emailResult = await sendTicketEmail({
+          await sendTicketEmail({
             to: order.buyer_email,
             name: order.buyer_email.split('@')[0],
             event,
@@ -158,7 +169,6 @@ export async function GET(request) {
             total: order.total,
             ticketIds,
           });
-          console.log('Ticket email result:', JSON.stringify(emailResult));
         }
       } catch (emailErr) {
         console.error('TICKET EMAIL FAILED:', emailErr.message || emailErr);
