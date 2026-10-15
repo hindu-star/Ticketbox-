@@ -6,6 +6,11 @@ import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { supabase } from '../../../../lib/supabase';
 import { getEvent, getTicketTypes, updateEvent } from '../../../../lib/events';
+import {
+  createPromoCode,
+  getPromoCodesForEvent,
+  deletePromoCode,
+} from '../../../../lib/promo';
 import { EVENT_FORMATS } from '../../../../lib/eventFormats';
 import { EVENT_CATEGORIES } from '../../../../lib/eventCategories';
 import {
@@ -32,6 +37,16 @@ function emptyTicket() {
     is_invite_only: false,
     invite_password: '',
     quantity_sold: 0,
+  };
+}
+
+function emptyPromo() {
+  return {
+    code: '',
+    discount_type: 'percent',
+    discount_value: '',
+    max_uses: '',
+    expires_at: '',
   };
 }
 
@@ -70,6 +85,14 @@ export default function EditEventPage() {
   const [theme, setTheme] = useState('classic');
 
   const [tickets, setTickets] = useState([]);
+
+  // Promo state
+  const [promoCodes, setPromoCodes] = useState([]);
+  const [showPromoForm, setShowPromoForm] = useState(false);
+  const [promoDraft, setPromoDraft] = useState(emptyPromo());
+  const [promoError, setPromoError] = useState('');
+  const [promoSaving, setPromoSaving] = useState(false);
+  const [promoDeletingId, setPromoDeletingId] = useState(null);
 
   const lgasForState =
     state && NIGERIA_STATES[state] ? NIGERIA_STATES[state] : [];
@@ -140,6 +163,9 @@ export default function EditEventPage() {
               }))
             : [emptyTicket()]
         );
+
+        const promos = await getPromoCodesForEvent(eventId);
+        setPromoCodes(promos);
       } catch (err) {
         setError(err.message || 'Failed to load event');
       } finally {
@@ -194,6 +220,78 @@ export default function EditEventPage() {
       (_, i) => i !== perkIndex
     );
     setTickets(updated);
+  }
+
+  // === PROMO HANDLERS ===
+  async function addPromoCode() {
+    setPromoError('');
+    const clean = promoDraft.code.toUpperCase().trim().replace(/\s+/g, '');
+    if (clean.length < 3) {
+      setPromoError('Code must be at least 3 characters');
+      return;
+    }
+    if (promoCodes.some((c) => c.code === clean)) {
+      setPromoError('That code already exists for this event');
+      return;
+    }
+    const value = Number(promoDraft.discount_value);
+    if (!value || value <= 0) {
+      setPromoError('Enter a valid discount value');
+      return;
+    }
+    if (promoDraft.discount_type === 'percent' && value > 100) {
+      setPromoError('Percent cannot exceed 100');
+      return;
+    }
+
+    setPromoSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not logged in');
+
+      const created = await createPromoCode({
+        eventId,
+        organizerId: user.id,
+        code: clean,
+        discountType: promoDraft.discount_type,
+        discountValue: value,
+        maxUses: promoDraft.max_uses ? Number(promoDraft.max_uses) : null,
+        expiresAt: promoDraft.expires_at
+          ? new Date(promoDraft.expires_at).toISOString()
+          : null,
+      });
+
+      setPromoCodes([created, ...promoCodes]);
+      setPromoDraft(emptyPromo());
+      setShowPromoForm(false);
+      setPromoError('');
+    } catch (err) {
+      setPromoError(err.message || 'Failed to create code');
+    } finally {
+      setPromoSaving(false);
+    }
+  }
+
+  async function handleDeletePromo(id, codeText) {
+    const confirmed = window.confirm(
+      `Delete code "${codeText}"? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setPromoDeletingId(id);
+    try {
+      await deletePromoCode(id);
+      setPromoCodes(promoCodes.filter((c) => c.id !== id));
+    } catch (err) {
+      alert('Failed to delete: ' + err.message);
+    } finally {
+      setPromoDeletingId(null);
+    }
+  }
+
+  function formatPromoDiscount(p) {
+    if (p.discount_type === 'percent') return `${p.discount_value}% off`;
+    return `₦${Number(p.discount_value).toLocaleString()} off`;
   }
 
   function validateStep1() {
@@ -853,6 +951,192 @@ export default function EditEventPage() {
               ))}
             </div>
 
+            {/* PROMO CODES SECTION */}
+            <div className="form-section promo-inline-section">
+              <div className="tickets-header">
+                <div>
+                  <h3>Promo codes</h3>
+                  <p className="promo-inline-hint">
+                    Optional — let buyers enter a code at checkout for a
+                    discount.
+                  </p>
+                </div>
+                {!showPromoForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPromoForm(true)}
+                    className="add-ticket-btn"
+                  >
+                    + Add code
+                  </button>
+                )}
+              </div>
+
+              {showPromoForm && (
+                <div className="promo-inline-form">
+                  {promoError && (
+                    <div className="auth-error">{promoError}</div>
+                  )}
+
+                  <input
+                    type="text"
+                    placeholder="e.g. EARLYBIRD"
+                    value={promoDraft.code}
+                    onChange={(e) =>
+                      setPromoDraft({
+                        ...promoDraft,
+                        code: e.target.value
+                          .toUpperCase()
+                          .replace(/[^A-Z0-9]/g, '')
+                          .slice(0, 20),
+                      })
+                    }
+                  />
+
+                  <div className="promo-row">
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">Type</label>
+                      <select
+                        value={promoDraft.discount_type}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            discount_type: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="percent">Percent off</option>
+                        <option value="fixed">Fixed amount off</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">
+                        {promoDraft.discount_type === 'percent'
+                          ? 'Percent'
+                          : 'Amount (₦)'}
+                      </label>
+                      <input
+                        type="number"
+                        placeholder={
+                          promoDraft.discount_type === 'percent'
+                            ? 'e.g. 20'
+                            : 'e.g. 1000'
+                        }
+                        value={promoDraft.discount_value}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            discount_value: e.target.value,
+                          })
+                        }
+                        min="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="promo-row">
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">
+                        Max uses (optional)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Unlimited"
+                        value={promoDraft.max_uses}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            max_uses: e.target.value,
+                          })
+                        }
+                        min="1"
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label">
+                        Expires (optional)
+                      </label>
+                      <input
+                        type="date"
+                        value={promoDraft.expires_at}
+                        onChange={(e) =>
+                          setPromoDraft({
+                            ...promoDraft,
+                            expires_at: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="promo-form-actions">
+                    <button
+                      type="button"
+                      className="promo-cancel-btn"
+                      onClick={() => {
+                        setShowPromoForm(false);
+                        setPromoDraft(emptyPromo());
+                        setPromoError('');
+                      }}
+                      disabled={promoSaving}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="promo-save-btn"
+                      onClick={addPromoCode}
+                      disabled={promoSaving}
+                    >
+                      {promoSaving ? 'Saving...' : 'Save code'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {promoCodes.length > 0 && (
+                <div className="promo-list">
+                  {promoCodes.map((c) => {
+                    const expired =
+                      c.expires_at && new Date(c.expires_at) < new Date();
+                    const maxed =
+                      c.max_uses !== null && c.times_used >= c.max_uses;
+
+                    return (
+                      <div key={c.id} className="promo-row-item">
+                        <div className="promo-row-left">
+                          <div className="promo-code-label">{c.code}</div>
+                          <div className="promo-code-meta">
+                            {formatPromoDiscount(c)} · Used {c.times_used}
+                            {c.max_uses ? ` / ${c.max_uses}` : ''}
+                          </div>
+                          {(expired || maxed) && (
+                            <div className="promo-code-status">
+                              {expired ? 'Expired' : 'Maxed out'}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="promo-delete-btn"
+                          onClick={() => handleDeletePromo(c.id, c.code)}
+                          disabled={promoDeletingId === c.id}
+                        >
+                          {promoDeletingId === c.id ? '...' : 'Remove'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {promoCodes.length === 0 && !showPromoForm && (
+                <p className="promo-inline-hint" style={{ marginTop: 4 }}>
+                  No promo codes yet.
+                </p>
+              )}
+            </div>
+
             <div className="publish-actions">
               <button
                 type="button"
@@ -885,4 +1169,4 @@ export default function EditEventPage() {
       <Footer />
     </>
   );
-  }
+}
