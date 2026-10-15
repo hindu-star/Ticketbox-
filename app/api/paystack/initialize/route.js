@@ -9,7 +9,13 @@ const supabase = createClient(
 
 export async function POST(request) {
   try {
-    const { eventId, ticketId, quantity, buyerEmail } = await request.json();
+    const {
+      eventId,
+      ticketId,
+      quantity,
+      buyerEmail,
+      promoCodeId,
+    } = await request.json();
 
     if (!eventId || !ticketId || !quantity || !buyerEmail) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -24,28 +30,29 @@ export async function POST(request) {
     if (ticketError || !ticket) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
-    
-// Check if event has ended
-const { data: eventData } = await supabase
-  .from('events')
-  .select('end_date, event_date, end_time')
-  .eq('id', eventId)
-  .single();
 
-if (eventData) {
-  const dateStr = eventData.end_date || eventData.event_date;
-  const endDT = eventData.end_time
-    ? new Date(`${dateStr}T${eventData.end_time}`)
-    : new Date(`${dateStr}T23:59:59`);
+    // Block if event has ended
+    const { data: eventData } = await supabase
+      .from('events')
+      .select('end_date, event_date, end_time')
+      .eq('id', eventId)
+      .single();
 
-  if (endDT < new Date()) {
-    return NextResponse.json(
-      { error: 'This event has ended.' },
-      { status: 400 }
-    );
-  }
-}
+    if (eventData) {
+      const dateStr = eventData.end_date || eventData.event_date;
+      const endDT = eventData.end_time
+        ? new Date(`${dateStr}T${eventData.end_time}`)
+        : new Date(`${dateStr}T23:59:59`);
 
+      if (endDT < new Date()) {
+        return NextResponse.json(
+          { error: 'This event has ended.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Capacity check
     if (ticket.capacity) {
       const sold = ticket.quantity_sold || 0;
       const remaining = ticket.capacity - sold;
@@ -59,18 +66,65 @@ if (eventData) {
 
       if (quantity > remaining) {
         return NextResponse.json(
-          { error: `Only ${remaining} ticket${remaining === 1 ? '' : 's'} left` },
+          {
+            error: `Only ${remaining} ticket${
+              remaining === 1 ? '' : 's'
+            } left`,
+          },
           { status: 400 }
         );
       }
     }
 
+    // Calculate subtotal
     const subtotal = Number(ticket.price) * quantity;
-    const feePercent = Number(process.env.NEXT_PUBLIC_SERVICE_FEE_PERCENT) || 5;
-    const serviceFee = Math.round((subtotal * feePercent) / 100);
-    const total = subtotal + serviceFee;
 
-    // Look up the event's organizer and their subaccount
+    // Validate promo code if provided
+    let discount = 0;
+    let promo = null;
+
+    if (promoCodeId) {
+      const { data: code, error: promoError } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('id', promoCodeId)
+        .eq('event_id', eventId)
+        .single();
+
+      if (!promoError && code) {
+        const expired =
+          code.expires_at && new Date(code.expires_at) < new Date();
+        const maxed =
+          code.max_uses !== null && code.times_used >= code.max_uses;
+
+        if (!expired && !maxed) {
+          if (code.discount_type === 'percent') {
+            discount = Math.round(
+              (subtotal * Number(code.discount_value)) / 100
+            );
+          } else {
+            discount = Math.min(Number(code.discount_value), subtotal);
+          }
+          if (discount > subtotal) discount = subtotal;
+          promo = code;
+        }
+      }
+    }
+
+    const discountedSubtotal = subtotal - discount;
+    const feePercent =
+      Number(process.env.NEXT_PUBLIC_SERVICE_FEE_PERCENT) || 5;
+    const serviceFee = Math.round((discountedSubtotal * feePercent) / 100);
+    const total = discountedSubtotal + serviceFee;
+
+    if (total <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid total. Please refresh and try again.' },
+        { status: 400 }
+      );
+    }
+
+    // Look up organizer's subaccount
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select('organizer_id')
@@ -98,7 +152,8 @@ if (eventData) {
     }
 
     const reference = generateReference();
-    const baseUrl = request.headers.get('origin') || 'https://ticketbox.com.ng';
+    const baseUrl =
+      request.headers.get('origin') || 'https://ticketbox.com.ng';
 
     const paystackData = await initializeTransaction({
       email: buyerEmail,
@@ -109,14 +164,18 @@ if (eventData) {
         ticketId,
         quantity,
         subtotal,
+        discount,
         serviceFee,
         total,
+        promoCodeId: promo?.id || null,
+        promoCode: promo?.code || null,
       },
       callbackUrl: `${baseUrl}/checkout/success?reference=${reference}`,
       subaccount: organizer.paystack_subaccount_code,
       bearer: 'account',
     });
 
+    // Save order
     await supabase.from('orders').insert([
       {
         event_id: eventId,
@@ -129,6 +188,8 @@ if (eventData) {
         total,
         paystack_reference: reference,
         status: 'pending',
+        // Store promo info on the order for reference
+        promo_code_id: promo?.id || null,
       },
     ]);
 
