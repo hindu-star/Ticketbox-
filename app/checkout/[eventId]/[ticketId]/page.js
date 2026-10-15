@@ -7,13 +7,12 @@ import Navbar from '../../../../components/Navbar';
 import Footer from '../../../../components/Footer';
 import { supabase } from '../../../../lib/supabase';
 import { getEvent, getTicketTypes } from '../../../../lib/events';
+import { validatePromoCode } from '../../../../lib/promo';
 
 export default function CheckoutPage() {
   const params = useParams();
   const router = useRouter();
-
-  const eventId = params?.eventId;
-  const ticketId = params?.ticketId;
+  const { eventId, ticketId } = params;
 
   const [event, setEvent] = useState(null);
   const [ticket, setTicket] = useState(null);
@@ -22,6 +21,12 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
+
+  // Promo state
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoChecking, setPromoChecking] = useState(false);
 
   useEffect(() => {
     if (!eventId || !ticketId) return;
@@ -55,13 +60,55 @@ export default function CheckoutPage() {
   }, [eventId, ticketId, router]);
 
   const subtotal = ticket ? Number(ticket.price) * quantity : 0;
-  const serviceFee = Math.round(subtotal * 0.05);
-  const total = subtotal + serviceFee;
+
+  // Recalculate discount when subtotal changes (quantity or applied promo)
+  const discount = appliedPromo
+    ? Math.min(appliedPromo.discount, subtotal)
+    : 0;
+
+  const discountedSubtotal = subtotal - discount;
+  const serviceFee = Math.round(discountedSubtotal * 0.05);
+  const total = discountedSubtotal + serviceFee;
+
+  async function applyPromoCode() {
+    setPromoError('');
+    setPromoChecking(true);
+
+    try {
+      const result = await validatePromoCode(eventId, promoInput, subtotal);
+      if (!result.valid) {
+        setPromoError(result.reason);
+        setAppliedPromo(null);
+        setPromoChecking(false);
+        return;
+      }
+
+      setAppliedPromo({
+        id: result.code.id,
+        code: result.code.code,
+        discount: result.discount,
+        discount_type: result.code.discount_type,
+        discount_value: result.code.discount_value,
+      });
+      setPromoInput('');
+    } catch (err) {
+      console.error(err);
+      setPromoError(err.message || 'Failed to check code');
+    } finally {
+      setPromoChecking(false);
+    }
+  }
+
+  function removePromo() {
+    setAppliedPromo(null);
+    setPromoError('');
+  }
 
   async function handlePay() {
     setPaying(true);
     setError('');
 
+    // Free ticket — skip Paystack
     if (total === 0) {
       try {
         const res = await fetch('/api/paystack/free', {
@@ -72,6 +119,7 @@ export default function CheckoutPage() {
             ticketId,
             quantity,
             buyerEmail: user.email,
+            promoCodeId: appliedPromo?.id || null,
           }),
         });
 
@@ -87,6 +135,7 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Paid ticket
     try {
       const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
@@ -96,6 +145,7 @@ export default function CheckoutPage() {
           ticketId,
           quantity,
           buyerEmail: user.email,
+          promoCodeId: appliedPromo?.id || null,
         }),
       });
 
@@ -128,7 +178,9 @@ export default function CheckoutPage() {
         <Navbar />
         <div className="auth-page">
           <div className="auth-error">{error}</div>
-          <Link href="/browse" className="content-btn-secondary">Back to events</Link>
+          <Link href="/browse" className="content-btn-secondary">
+            Back to events
+          </Link>
         </div>
         <Footer />
       </>
@@ -189,15 +241,85 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* PROMO CODE */}
+        <div className="checkout-card">
+          {!appliedPromo ? (
+            <>
+              <label className="field-label">Have a promo code?</label>
+              <div className="promo-checkout-row">
+                <input
+                  type="text"
+                  placeholder="Enter code"
+                  value={promoInput}
+                  onChange={(e) =>
+                    setPromoInput(
+                      e.target.value
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '')
+                        .slice(0, 20)
+                    )
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={applyPromoCode}
+                  disabled={!promoInput || promoChecking}
+                  className="promo-apply-btn"
+                >
+                  {promoChecking ? '...' : 'Apply'}
+                </button>
+              </div>
+              {promoError && (
+                <p className="promo-error-text">{promoError}</p>
+              )}
+            </>
+          ) : (
+            <div className="promo-applied-row">
+              <div>
+                <div className="promo-applied-label">
+                  Code applied: <strong>{appliedPromo.code}</strong>
+                </div>
+                <div className="promo-applied-meta">
+                  {appliedPromo.discount_type === 'percent'
+                    ? `${appliedPromo.discount_value}% off`
+                    : `₦${Number(
+                        appliedPromo.discount_value
+                      ).toLocaleString()} off`}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="promo-remove-btn"
+                onClick={removePromo}
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="checkout-summary">
           <div className="summary-row">
-            <span>Subtotal ({quantity} × ₦{Number(ticket.price).toLocaleString()})</span>
+            <span>
+              Subtotal ({quantity} × ₦{Number(ticket.price).toLocaleString()})
+            </span>
             <span>₦{subtotal.toLocaleString()}</span>
           </div>
+
+          {appliedPromo && discount > 0 && (
+            <div className="summary-row summary-discount">
+              <span>
+                Discount ({appliedPromo.code})
+              </span>
+              <span>−₦{discount.toLocaleString()}</span>
+            </div>
+          )}
+
           <div className="summary-row">
             <span>Service fee (5%)</span>
             <span>₦{serviceFee.toLocaleString()}</span>
           </div>
+
           <div className="summary-row summary-total">
             <span>Total</span>
             <span>₦{total.toLocaleString()}</span>
@@ -212,15 +334,24 @@ export default function CheckoutPage() {
           {paying
             ? 'Please wait...'
             : total === 0
-              ? 'Get free ticket'
-              : `Pay ₦${total.toLocaleString()}`}
+            ? 'Get free ticket'
+            : `Pay ₦${total.toLocaleString()}`}
         </button>
 
-        <p style={{ fontSize: 13, color: '#64748b', textAlign: 'center', marginTop: 12 }}>
-          {total === 0 ? 'Free event — no payment required' : 'Secure payment powered by Paystack'}
+        <p
+          style={{
+            fontSize: 13,
+            color: '#64748b',
+            textAlign: 'center',
+            marginTop: 12,
+          }}
+        >
+          {total === 0
+            ? 'Free event — no payment required'
+            : 'Secure payment powered by Paystack'}
         </p>
       </div>
       <Footer />
     </>
   );
-    }
+          }
