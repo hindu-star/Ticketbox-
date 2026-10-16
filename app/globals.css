@@ -5027,3 +5027,113 @@ a.blog-card { display: block; color: inherit; }
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
 }
+/* CHART */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.chart-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+.chart-range-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--gray-50);
+  padding: 4px;
+  border-radius: 10px;
+}
+.chart-range-tabs button {
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  cursor: pointer;
+  font-family: inherit;
+}
+.chart-range-tabs button.active {
+  background: #fff;
+  color: var(--blue);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.chart-range-tabs button:hover:not(.active) {
+  color: var(--gray-700);
+}
+
+.chart-wrap {
+  margin: 0 -8px;
+  padding: 4px 8px 0;
+}
+
+.chart-empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 14px;
+  border: 1px dashed var(--gray-200);
+  border-radius: 12px;
+}
+.chart-loading {
+  padding: 4px 0;
+}
+
+.chart-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-100);
+}
+.chart-stat {
+  text-align: left;
+}
+.chart-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+.chart-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--black);
+  letter-spacing: -0.3px;
+}
+.chart-stat-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+@media (max-width: 600px) {
+  .chart-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .chart-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .chart-range-tabs {
+    justify-content: center;
+  }
+  .chart-range-tabs button {
+    flex: 1;
+  }
+  .chart-wrap {
+    margin: 0 -12px;
+  }
+  }
