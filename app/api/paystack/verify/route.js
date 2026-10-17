@@ -107,7 +107,24 @@ export async function GET(request) {
             console.error('Promo increment error:', promoErr);
           }
         }
+// Log platform earnings permanently
+try {
+  const { data: ev } = await supabase
+    .from('events')
+    .select('title')
+    .eq('id', existingOrder.event_id)
+    .single();
 
+  await supabase.from('platform_earnings').insert([{
+    order_reference: existingOrder.paystack_reference,
+    event_title: ev?.title || 'Unknown Event',
+    buyer_email: existingOrder.buyer_email,
+    gross_amount: existingOrder.total,
+    platform_fee: Math.round(existingOrder.total * 0.05),
+  }]);
+} catch (err) {
+  console.error('Failed to log platform earnings:', err);
+}
         // Notify organizer
         try {
           const { data: ev } = await supabase
