@@ -56,9 +56,7 @@ export default function Navbar() {
   }
 
   const initial = user?.email ? user.email[0].toUpperCase() : '';
-  const avatarColor = user?.email
-    ? getAvatarColor(user.email)
-    : '#333';
+  const avatarColor = user?.email ? getAvatarColor(user.email) : '#333';
 
   return (
     <nav className="navbar">
@@ -66,40 +64,10 @@ export default function Navbar() {
         Ticket<span>Box</span>
       </Link>
 
-      {/* Desktop links */}
-      <div className="navbar-links navbar-desktop">
-        <Link href="/browse">Browse</Link>
-        {!loading && user && (
-          <Link href="/my-events">My Events</Link>
-        )}
-        <Link href="/create" className="navbar-cta">
-          + Create
-        </Link>
-        {loading ? null : user ? (
-          <>
-            <NotificationBell />
-            <div
-              className="navbar-avatar"
-              style={{ background: avatarColor }}
-              title={user.email}
-            >
-              {initial}
-            </div>
-            <button
-              onClick={handleLogout}
-              className="navbar-logout"
-            >
-              Log out
-            </button>
-          </>
-        ) : (
-          <Link href="/login">Login</Link>
-        )}
-      </div>
-
-      {/* Mobile: bell + avatar + hamburger */}
-      <div className="navbar-mobile">
+      {/* ALWAYS SHOW THE MOBILE STYLE - NO DESKTOP LINKS */}
+      <div className="navbar-mobile" style={{ display: 'flex' }}>
         {!loading && user && <NotificationBell />}
+        
         {!loading && user && (
           <div
             className="navbar-avatar"
@@ -109,6 +77,7 @@ export default function Navbar() {
             {initial}
           </div>
         )}
+        
         <button
           className="navbar-burger"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -120,15 +89,15 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile menu drawer */}
+      {/* MOBILE MENU DRAWER */}
       {menuOpen && (
         <div className="navbar-drawer">
-  {!loading && user?.id === '4747975a-50f4-4329-94ef-80672e5ecd31' && (
-    <Link href="/admin" className="drawer-admin-link">
-       Admin
-    </Link>
-  )}
-  <Link href="/">Home</Link>
+          {!loading && user?.id === '4747975a-50f4-4329-94ef-80672e5ecd31' && (
+            <Link href="/admin" className="drawer-admin-link">
+              ⚙️ Admin
+            </Link>
+          )}
+          <Link href="/">Home</Link>
 
           {loading ? null : user ? (
             <>
@@ -137,19 +106,11 @@ export default function Navbar() {
 
               <button
                 type="button"
-                className={`drawer-account-toggle ${
-                  accountOpen ? 'open' : ''
-                }`}
+                className={`drawer-account-toggle ${accountOpen ? 'open' : ''}`}
                 onClick={() => setAccountOpen(!accountOpen)}
               >
                 <span>Account</span>
-                <span
-                  className={`drawer-chevron ${
-                    accountOpen ? 'open' : ''
-                  }`}
-                >
-                  ›
-                </span>
+                <span className={`drawer-chevron ${accountOpen ? 'open' : ''}`}>›</span>
               </button>
 
               {accountOpen && (
@@ -164,10 +125,8 @@ export default function Navbar() {
               <Link href="/create">+ Create event</Link>
               <Link href="/how-to-get-paid">How to get paid</Link>
               <Link href="/contact">Help</Link>
-              <button
-                onClick={handleLogout}
-                className="drawer-logout"
-              >
+              
+              <button onClick={handleLogout} className="drawer-logout">
                 Sign out
               </button>
             </>
@@ -182,4 +141,4 @@ export default function Navbar() {
       )}
     </nav>
   );
-          }
+        }
