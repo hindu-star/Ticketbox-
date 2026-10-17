@@ -175,18 +175,24 @@ export default function HowToGetPaidPage() {
               On event day, open the ☰ menu → <strong>My Events</strong> → tap{' '}
               <strong>Check-in</strong> on your event.
             </p>
+            <p>
+              <strong>Your door staff don&apos;t need accounts.</strong> Here is how to set them up:
+            </p>
             <ol>
               <li>
-                Set a 4-digit PIN — share this with whoever is scanning at the
-                door
+                <strong>Set a PIN:</strong> The first time you open Check-in, create a 4-digit PIN.
               </li>
               <li>
-                Tap <strong>Start scanning</strong> → point your phone at each
-                buyer&apos;s QR code
+                <strong>Copy the link:</strong> Tap <strong>📋 Copy Link &amp; PIN</strong> to copy the direct check-in link and the PIN.
               </li>
               <li>
-                <strong>Green ✅</strong> = valid ticket ·{' '}
-                <strong>Red ❌</strong> = already used or invalid
+                <strong>Share it:</strong> Send that link and PIN to your door staff.
+              </li>
+              <li>
+                <strong>They scan:</strong> Your staff tap the link, enter the PIN, and the scanner opens instantly. (They don&apos;t need to log in).
+              </li>
+              <li>
+                <strong>Check them in:</strong> Point the camera at the buyer&apos;s QR code. <strong>Green ✅</strong> means valid, <strong>Red ❌</strong> means already used.
               </li>
             </ol>
             <p>
@@ -269,4 +275,4 @@ export default function HowToGetPaidPage() {
       <Footer />
     </>
   );
-                }
+          }
