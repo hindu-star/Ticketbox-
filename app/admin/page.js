@@ -228,18 +228,9 @@ export default function AdminPage() {
                 <div className="admin-stat-value">{stats.organizers}</div>
               </div>
               <div className="admin-stat">
-                <div className="admin-stat-label">Events</div>
+                <div className="admin-stat-label">Events hosted</div>
                 <div className="admin-stat-value">
-                  {stats.publishedEvents}
-                  <span className="admin-stat-sub">
-                    {' '}/ {stats.totalEvents} total
-                  </span>
-                </div>
-              </div>
-              <div className="admin-stat">
-                <div className="admin-stat-label">Drafts</div>
-                <div className="admin-stat-value">
-                  {stats.draftEvents}
+                  {stats.totalEventsHosted}
                 </div>
               </div>
               <div className="admin-stat">
@@ -254,12 +245,8 @@ export default function AdminPage() {
                   {formatNaira(stats.revenueAllTime)}
                 </div>
               </div>
-              <div className="admin-stat">
-                <div className="admin-stat-label">Revenue (this month)</div>
-                <div className="admin-stat-value">
-                  {formatNaira(stats.revenueThisMonth)}
-                </div>
-              </div>
+              
+              {/* HIGHLIGHT EARNINGS */}
               <div className="admin-stat admin-stat-highlight">
                 <div className="admin-stat-label">
                   Your earnings (all time)
@@ -337,22 +324,11 @@ export default function AdminPage() {
                         </span>
                         <span>{a.account_name || '—'}</span>
                       </div>
-                      <div className="admin-detail-row">
-                        <span className="admin-detail-label">User ID</span>
-                        <span
-                          style={{
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                          }}
-                        >
-                          {a.id}
-                        </span>
-                      </div>
                     </div>
 
                     <div className="admin-approval-note">
                       📧 Email this organizer for CAC + bank statement + ID
-                      before approving. See the SOP.
+                      before approving.
                     </div>
 
                     <div className="admin-approval-actions">
@@ -495,4 +471,4 @@ export default function AdminPage() {
       <Footer />
     </>
   );
-            }
+        }
