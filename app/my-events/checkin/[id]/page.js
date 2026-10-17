@@ -32,6 +32,9 @@ export default function CheckInPage() {
   const [setupPin, setSetupPin] = useState('');
   const [setupConfirm, setSetupConfirm] = useState('');
   const [setupSaving, setSetupSaving] = useState(false);
+  
+  const [showChangePin, setShowChangePin] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
@@ -63,11 +66,8 @@ export default function CheckInPage() {
         if (!pin) {
           setNeedsSetup(true);
         } else {
-          const stored = localStorage.getItem(PIN_STORAGE_PREFIX + eventId);
-          if (stored === pin) {
-            setStoredPin(pin);
-            loadStats();
-          }
+          setStoredPin(pin);
+          loadStats();
         }
       } catch (err) {
         setError(err.message || 'Failed to load event');
@@ -78,7 +78,6 @@ export default function CheckInPage() {
     if (eventId) load();
   }, [eventId, router]);
 
-  // Cleanup scanner on unmount
   useEffect(() => {
     return () => {
       if (html5QrRef.current) {
@@ -116,6 +115,9 @@ export default function CheckInPage() {
       setStoredPin(setupPin);
       setNeedsSetup(false);
       setPinError('');
+      setShowChangePin(false);
+      setSetupPin('');
+      setSetupConfirm('');
       loadStats();
     } catch (err) {
       setPinError(err.message || 'Failed to save PIN');
@@ -124,18 +126,11 @@ export default function CheckInPage() {
     }
   }
 
-  function handleVerifyPin(e) {
-    e.preventDefault();
-    getCheckInPin(eventId).then((actualPin) => {
-      if (actualPin === pinInput) {
-        localStorage.setItem(PIN_STORAGE_PREFIX + eventId, pinInput);
-        setStoredPin(pinInput);
-        setPinError('');
-        loadStats();
-      } else {
-        setPinError('Incorrect PIN');
-      }
-    });
+  function copyShareLink() {
+    const url = `${window.location.origin}/checkin/${eventId}`;
+    navigator.clipboard.writeText(`${url}\nPIN: ${storedPin}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   async function startScanner() {
@@ -144,8 +139,6 @@ export default function CheckInPage() {
 
     try {
       const { Html5Qrcode } = await import('html5-qrcode');
-
-      // Small delay to let the display:block apply before camera init
       await new Promise((r) => setTimeout(r, 100));
 
       const scanner = new Html5Qrcode('qr-reader');
@@ -166,8 +159,7 @@ export default function CheckInPage() {
       console.error('Scanner error:', err);
       setScanResult({
         status: 'camera_error',
-        message:
-          'Could not access the camera. Check permissions, or use manual entry below.',
+        message: 'Could not access camera. Check permissions.',
       });
       setScanning(false);
     }
@@ -190,9 +182,7 @@ export default function CheckInPage() {
     try {
       const parsed = JSON.parse(decodedText);
       if (parsed && parsed.ticketId) ticketId = parsed.ticketId;
-    } catch (e) {
-      // not JSON
-    }
+    } catch (e) {}
     await processReference(ticketId);
   }
 
@@ -233,8 +223,7 @@ export default function CheckInPage() {
 
   function formatTime(iso) {
     if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleTimeString('en-GB', {
+    return new Date(iso).toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -267,8 +256,8 @@ export default function CheckInPage() {
     );
   }
 
-  // === PIN SETUP ===
-  if (needsSetup) {
+  // === PIN SETUP / CHANGE ===
+  if (needsSetup || showChangePin) {
     return (
       <>
         <Navbar />
@@ -277,10 +266,11 @@ export default function CheckInPage() {
             <Link href="/my-events" className="analytics-back">
               ← Back to My Events
             </Link>
-            <h1>Set up check-in</h1>
+            <h1>{needsSetup ? 'Set up check-in' : 'Change PIN'}</h1>
             <p className="analytics-subtitle">
-              Create a PIN for scanning tickets at {event.title}. You&apos;ll
-              share this with whoever is at the door.
+              {needsSetup
+                ? 'Create a PIN for scanning tickets. Share it with door staff.'
+                : 'Enter a new PIN. Old links will stop working immediately.'}
             </p>
           </div>
 
@@ -290,7 +280,7 @@ export default function CheckInPage() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder="4-digit PIN"
+              placeholder="New 4-digit PIN"
               value={setupPin}
               onChange={(e) =>
                 setSetupPin(e.target.value.replace(/\D/g, '').slice(0, 6))
@@ -302,7 +292,7 @@ export default function CheckInPage() {
             <input
               type="text"
               inputMode="numeric"
-              placeholder="Confirm PIN"
+              placeholder="Confirm new PIN"
               value={setupConfirm}
               onChange={(e) =>
                 setSetupConfirm(e.target.value.replace(/\D/g, '').slice(0, 6))
@@ -311,50 +301,19 @@ export default function CheckInPage() {
               required
             />
             <button type="submit" disabled={setupSaving}>
-              {setupSaving ? 'Saving...' : 'Save PIN'}
+              {setupSaving ? 'Saving...' : 'Save new PIN'}
             </button>
-          </form>
-
-          <p className="field-hint" style={{ marginTop: 16 }}>
-            This PIN protects your scanner page. Only people with the PIN can
-            scan tickets.
-          </p>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  // === PIN VERIFICATION ===
-  if (!storedPin) {
-    return (
-      <>
-        <Navbar />
-        <div className="checkin-page">
-          <div className="checkin-header">
-            <Link href="/my-events" className="analytics-back">
-              ← Back to My Events
-            </Link>
-            <h1>Enter check-in PIN</h1>
-            <p className="analytics-subtitle">{event.title}</p>
-          </div>
-
-          <form className="auth-form" onSubmit={handleVerifyPin}>
-            {pinError && <div className="auth-error">{pinError}</div>}
-
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="Enter PIN"
-              value={pinInput}
-              onChange={(e) =>
-                setPinInput(e.target.value.replace(/\D/g, '').slice(0, 6))
-              }
-              maxLength={6}
-              required
-              autoFocus
-            />
-            <button type="submit">Unlock scanner</button>
+            
+            {showChangePin && (
+              <button
+                type="button"
+                className="promo-cancel-btn"
+                onClick={() => setShowChangePin(false)}
+                style={{ marginTop: 10 }}
+              >
+                Cancel
+              </button>
+            )}
           </form>
         </div>
         <Footer />
@@ -375,6 +334,38 @@ export default function CheckInPage() {
           <p className="analytics-subtitle">{event.title}</p>
         </div>
 
+        {/* SHARE BOX */}
+        <div className="share-link-box">
+          <div className="share-link-title">Share with door staff</div>
+          <p className="share-link-desc">
+            Send this link and PIN to your helpers. They won&apos;t need to log in.
+          </p>
+          <div className="share-link-row">
+            <span className="share-link-text">
+              {typeof window !== 'undefined'
+                ? `${window.location.origin}/checkin/${eventId}`
+                : `/checkin/${eventId}`}
+            </span>
+            <span className="share-pin-text">PIN: {storedPin}</span>
+          </div>
+          <div className="share-link-actions">
+            <button
+              type="button"
+              className="share-copy-btn"
+              onClick={copyShareLink}
+            >
+              {copied ? '✅ Copied!' : '📋 Copy Link & PIN'}
+            </button>
+            <button
+              type="button"
+              className="share-change-pin-btn"
+              onClick={() => setShowChangePin(true)}
+            >
+              Change PIN
+            </button>
+          </div>
+        </div>
+
         {stats && (
           <div className="checkin-stats">
             <div className="checkin-stat">
@@ -392,38 +383,26 @@ export default function CheckInPage() {
           </div>
         )}
 
-        {/* 
-          CRITICAL FIX: The div is always mounted. 
-          We just hide it with display: none when not scanning.
-        */}
-        <div 
-          id="qr-reader" 
-          className="qr-reader-box" 
-          style={{ 
+        <div
+          id="qr-reader"
+          className="qr-reader-box"
+          style={{
             display: scanning ? 'block' : 'none',
             width: '100%',
             borderRadius: '16px',
             overflow: 'hidden',
-            background: '#000'
-          }} 
+            background: '#000',
+          }}
         />
 
         {!scanning && !scanResult && (
-          <button
-            type="button"
-            className="checkin-scan-btn"
-            onClick={startScanner}
-          >
+          <button type="button" className="checkin-scan-btn" onClick={startScanner}>
             📷 Start scanning
           </button>
         )}
 
         {scanning && !scanResult && (
-          <button
-            type="button"
-            className="checkin-stop-btn"
-            onClick={stopScanner}
-          >
+          <button type="button" className="checkin-stop-btn" onClick={stopScanner}>
             Stop camera
           </button>
         )}
@@ -436,9 +415,7 @@ export default function CheckInPage() {
                 <div className="scan-result-title">Checked in!</div>
                 <div className="scan-result-body">
                   <div>{scanResult.order?.buyer_email || 'Valid ticket'}</div>
-                  <div>
-                    Ticket #{scanResult.ticket_number || '1'}
-                  </div>
+                  <div>Ticket #{scanResult.ticket_number || '1'}</div>
                 </div>
               </>
             )}
@@ -449,9 +426,7 @@ export default function CheckInPage() {
                 <div className="scan-result-title">Already checked in</div>
                 <div className="scan-result-body">
                   <div>{scanResult.order?.buyer_email || 'Valid ticket'}</div>
-                  <div>
-                    Scanned at {formatTime(scanResult.ticket?.checked_in_at)}
-                  </div>
+                  <div>Scanned at {formatTime(scanResult.ticket?.checked_in_at)}</div>
                 </div>
               </>
             )}
@@ -462,7 +437,6 @@ export default function CheckInPage() {
                 <div className="scan-result-title">Not paid</div>
                 <div className="scan-result-body">
                   <div>{scanResult.order?.buyer_email || ''}</div>
-                  <div>Status: {scanResult.order?.status}</div>
                 </div>
               </>
             )}
@@ -471,9 +445,6 @@ export default function CheckInPage() {
               <>
                 <div className="scan-result-icon">❌</div>
                 <div className="scan-result-title">Invalid ticket</div>
-                <div className="scan-result-body">
-                  No ticket found for this QR code.
-                </div>
               </>
             )}
 
@@ -493,11 +464,7 @@ export default function CheckInPage() {
               </>
             )}
 
-            <button
-              type="button"
-              className="scan-next-btn"
-              onClick={handleScanNext}
-            >
+            <button type="button" className="scan-next-btn" onClick={handleScanNext}>
               Scan next →
             </button>
           </div>
