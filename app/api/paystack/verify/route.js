@@ -7,7 +7,7 @@ import { createNotification } from '../../../../lib/notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export async function GET(request) {
@@ -107,24 +107,36 @@ export async function GET(request) {
             console.error('Promo increment error:', promoErr);
           }
         }
-// Log platform earnings permanently
-try {
-  const { data: ev } = await supabase
-    .from('events')
-    .select('title')
-    .eq('id', existingOrder.event_id)
-    .single();
 
-  await supabase.from('platform_earnings').insert([{
-    order_reference: existingOrder.paystack_reference,
-    event_title: ev?.title || 'Unknown Event',
-    buyer_email: existingOrder.buyer_email,
-    gross_amount: existingOrder.total,
-    platform_fee: Math.round(existingOrder.total * 0.05),
-  }]);
-} catch (err) {
-  console.error('Failed to log platform earnings:', err);
-}
+        // Log platform earnings permanently
+        try {
+          const { data: ev } = await supabase
+            .from('events')
+            .select('title')
+            .eq('id', existingOrder.event_id)
+            .single();
+
+          // Check if this is the very first sale for this event
+          const { count: previousSales } = await supabase
+            .from('platform_earnings')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_title', ev?.title || 'Unknown Event');
+
+          const isFirstSale = previousSales === 0;
+
+          await supabase.from('platform_earnings').insert([{
+            order_reference: existingOrder.paystack_reference,
+            event_title: ev?.title || 'Unknown Event',
+            buyer_email: existingOrder.buyer_email,
+            gross_amount: existingOrder.total,
+            platform_fee: Math.round(existingOrder.total * 0.05),
+            ticket_quantity: existingOrder.quantity,
+            is_new_event: isFirstSale,
+          }]);
+        } catch (err) {
+          console.error('Failed to log platform earnings:', err);
+        }
+
         // Notify organizer
         try {
           const { data: ev } = await supabase
