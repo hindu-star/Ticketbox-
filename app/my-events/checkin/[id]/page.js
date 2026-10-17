@@ -78,6 +78,17 @@ export default function CheckInPage() {
     if (eventId) load();
   }, [eventId, router]);
 
+  // Cleanup scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (html5QrRef.current) {
+        try {
+          html5QrRef.current.stop().catch(() => {});
+        } catch (e) {}
+      }
+    };
+  }, []);
+
   async function loadStats() {
     try {
       const s = await getCheckInStatsByTickets(eventId);
@@ -133,6 +144,9 @@ export default function CheckInPage() {
 
     try {
       const { Html5Qrcode } = await import('html5-qrcode');
+
+      // Small delay to let the display:block apply before camera init
+      await new Promise((r) => setTimeout(r, 100));
 
       const scanner = new Html5Qrcode('qr-reader');
       html5QrRef.current = scanner;
@@ -378,7 +392,21 @@ export default function CheckInPage() {
           </div>
         )}
 
-        <div id="qr-reader" className="qr-reader-box" />
+        {/* 
+          CRITICAL FIX: The div is always mounted. 
+          We just hide it with display: none when not scanning.
+        */}
+        <div 
+          id="qr-reader" 
+          className="qr-reader-box" 
+          style={{ 
+            display: scanning ? 'block' : 'none',
+            width: '100%',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: '#000'
+          }} 
+        />
 
         {!scanning && !scanResult && (
           <button
@@ -514,4 +542,4 @@ export default function CheckInPage() {
       <Footer />
     </>
   );
-      }
+                }
