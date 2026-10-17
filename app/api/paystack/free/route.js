@@ -6,7 +6,7 @@ import { createNotification } from '../../../../lib/notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export async function POST(request) {
@@ -121,7 +121,7 @@ export async function POST(request) {
       console.error('Ticket creation error:', ticketErr);
     }
 
-    // Increment promo usage if applied
+    // Increment promo usage
     if (promoCodeId) {
       try {
         const { data: promoRow } = await supabase
@@ -147,6 +147,28 @@ export async function POST(request) {
       .from('ticket_types')
       .update({ quantity_sold: newSold })
       .eq('id', ticket.id);
+
+    // Log permanent stats for free tickets
+    try {
+      const { count: previousSales } = await supabase
+        .from('platform_earnings')
+        .select('id', { count: 'exact', head: true })
+        .eq('event_title', eventData?.title || 'Unknown Event');
+
+      const isFirstSale = previousSales === 0;
+
+      await supabase.from('platform_earnings').insert([{
+        order_reference: reference,
+        event_title: eventData?.title || 'Unknown Event',
+        buyer_email: buyerEmail,
+        gross_amount: 0,
+        platform_fee: 0,
+        ticket_quantity: quantity,
+        is_new_event: isFirstSale,
+      }]);
+    } catch (err) {
+      console.error('Failed to log free ticket stats:', err);
+    }
 
     // Notify organizer
     if (eventData?.organizer_id) {
@@ -184,13 +206,9 @@ export async function POST(request) {
           total: 0,
           ticketIds,
         });
-        console.log('Free ticket email result:', JSON.stringify(emailResult));
       }
     } catch (emailErr) {
-      console.error(
-        'FREE TICKET EMAIL FAILED:',
-        emailErr.message || emailErr
-      );
+      console.error('FREE TICKET EMAIL FAILED:', emailErr.message || emailErr);
     }
 
     return NextResponse.json({ reference, success: true });
